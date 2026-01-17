@@ -11,6 +11,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final nameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
@@ -21,6 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
+    nameCtrl.dispose();
     emailCtrl.dispose();
     passCtrl.dispose();
     confirmCtrl.dispose();
@@ -34,18 +36,24 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
+      final name = nameCtrl.text.trim();
       final email = emailCtrl.text.trim();
       final pass = passCtrl.text;
       final confirm = confirmCtrl.text;
 
-      if (email.isEmpty || pass.isEmpty || confirm.isEmpty) {
+      if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
         throw Exception('Please fill in all fields.');
       }
       if (pass != confirm) {
         throw Exception('Passwords do not match.');
       }
 
-      await AuthService.registerEmailPassword(email: email, password: pass);
+      // IMPORTANT: use your existing AuthService signature
+      await AuthService.registerEmailPassword(
+        displayName: name,
+        email: email,
+        password: pass,
+      );
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -53,9 +61,14 @@ class _RegisterPageState extends State<RegisterPage> {
         MaterialPageRoute(builder: (_) => const VerifyEmailPage()),
       );
     } catch (e) {
-      setState(() => errorText = e.toString());
+      if (mounted) {
+        setState(() => errorText = e.toString());
+      }
     } finally {
-      setState(() => loading = false);
+      // IMPORTANT: no "return" inside finally
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -74,7 +87,6 @@ class _RegisterPageState extends State<RegisterPage> {
                 const AuthHeader(
                   title: 'Get On Board!',
                   subtitle: 'Create your profile to start your journey.',
-                  // assetPath: 'assets/auth_illustration.png',
                 ),
                 const SizedBox(height: 16),
 
@@ -107,6 +119,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 12),
 
                 RoundedField(
+                  controller: nameCtrl,
+                  hint: 'Full Name',
+                  icon: Icons.person_outline,
+                ),
+                const SizedBox(height: 12),
+
+                RoundedField(
                   controller: emailCtrl,
                   hint: 'E-Mail',
                   icon: Icons.email_outlined,
@@ -123,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     onPressed: () => setState(() => hidePass = !hidePass),
                     icon: Icon(
                       hidePass ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey.shade600,
+                      color: Colors.black54,
                     ),
                   ),
                 ),
@@ -144,7 +163,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 12),
                 PrimaryButton(
                   text: 'Signup',
-                  onPressed: _signup,
+                  onPressed: loading ? null : _signup,
                   loading: loading,
                 ),
 

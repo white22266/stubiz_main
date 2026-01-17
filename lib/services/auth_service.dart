@@ -12,6 +12,7 @@ class AuthService {
   static Future<void> logout() => _auth.signOut();
 
   static Future<void> registerEmailPassword({
+    required String displayName,
     required String email,
     required String password,
   }) async {
@@ -19,16 +20,18 @@ class AuthService {
       email: email.trim(),
       password: password,
     );
-
+    await cred.user!.updateDisplayName(displayName.trim());
     // Activation step: send verification link
     await cred.user!.sendEmailVerification();
 
     // Create user profile in Firestore
     await _db.collection('users').doc(cred.user!.uid).set({
       'email': cred.user!.email,
+      'displayName': displayName.trim(),
       'role': 'student',
       'emailVerified': false,
       'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 

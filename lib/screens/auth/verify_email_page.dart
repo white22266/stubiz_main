@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import 'login_page.dart';
+import 'role_router.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
@@ -11,77 +11,92 @@ class VerifyEmailPage extends StatefulWidget {
 
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
   bool loading = false;
-  String message =
-      'We sent an activation email. Verify it, then press Continue.';
-
-  Future<void> _continue() async {
-    setState(() {
-      loading = true;
-      message = '';
-    });
-
-    try {
-      final verified = await AuthService.reloadAndCheckEmailVerified();
-      if (verified) {
-        await AuthService.logout(); // force login again after activation
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-        return;
-      }
-
-      setState(() {
-        message = 'Not verified yet. Please verify your email and try again.';
-      });
-    } catch (e) {
-      setState(() => message = e.toString());
-    } finally {
-      setState(() => loading = false);
-    }
-  }
+  String errorText = '';
 
   Future<void> _resend() async {
     setState(() {
       loading = true;
-      message = '';
+      errorText = '';
     });
 
     try {
       await AuthService.resendActivationEmail();
-      setState(() => message = 'Activation email resent.');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verification email sent. Please check inbox/spam.'),
+        ),
+      );
     } catch (e) {
-      setState(() => message = e.toString());
+      if (mounted) setState(() => errorText = e.toString());
     } finally {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _checkVerified() async {
+    setState(() {
+      loading = true;
+      errorText = '';
+    });
+
+    try {
+      final verified = await AuthService.reloadAndCheckEmailVerified();
+      if (!mounted) return;
+
+      if (!verified) {
+        setState(
+          () => errorText =
+              'Not verified yet. Please click the link in your email.',
+        );
+        return;
+      }
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const RoleRouter()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (mounted) setState(() => errorText = e.toString());
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Activate Account')),
+      appBar: AppBar(title: const Text('Verify Email')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(message),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
+            const Text(
+              'We have sent a verification link to your email.\n\n'
+              'Please verify your email to activate your account.',
+              style: TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 14),
+
+            if (errorText.isNotEmpty)
+              Text(errorText, style: const TextStyle(color: Colors.red)),
+
+            const Spacer(),
+
             ElevatedButton(
-              onPressed: loading ? null : _continue,
+              onPressed: loading ? null : _checkVerified,
               child: loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Continue'),
+                  ? const CircularProgressIndicator()
+                  : const Text('I already verified'),
             ),
             const SizedBox(height: 10),
             OutlinedButton(
               onPressed: loading ? null : _resend,
-              child: const Text('Resend Activation Email'),
+              child: const Text('Resend verification email'),
             ),
           ],
         ),
