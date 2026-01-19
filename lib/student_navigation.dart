@@ -5,21 +5,21 @@ import 'screens/promotion/promotion_home.dart';
 import 'screens/chat/chat_list.dart';
 import 'screens/profile/profile_page.dart';
 
-class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+class StudentNavigation extends StatefulWidget {
+  const StudentNavigation({super.key});
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<StudentNavigation> createState() => _StudentNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _StudentNavigationState extends State<StudentNavigation> {
   int _index = 0;
 
-  final screens = const [
+  final List<Widget> screens = const [
     MarketplaceHome(),
     ExchangeHome(),
     PromotionHome(),
-    ChatList(),
+    ChatListScreen(),
     ProfilePage(),
   ];
 
@@ -33,7 +33,10 @@ class _MainNavigationState extends State<MainNavigation> {
         onTap: (i) => setState(() => _index = i),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Market'),
-          BottomNavigationBarItem(icon: Icon(Icons.swap_horiz), label: 'Exchange'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.swap_horiz),
+            label: 'Exchange',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'Promote'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

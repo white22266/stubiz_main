@@ -11,8 +11,9 @@ class MyListingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    if (user == null)
+    if (user == null) {
       return const Scaffold(body: Center(child: Text('Error: Not logged in')));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -25,8 +26,9 @@ class MyListingsPage extends StatelessWidget {
           (items) => items.where((item) => item.ownerId == user.uid).toList(),
         ),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting)
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
           final items = snapshot.data ?? [];
 
           if (items.isEmpty) {

@@ -24,6 +24,17 @@ extension ListingTypeExtension on ListingType {
         return 'promotions';
     }
   }
+
+  String get displayName {
+    switch (this) {
+      case ListingType.product:
+        return 'Product';
+      case ListingType.exchange:
+        return 'Exchange';
+      case ListingType.promotion:
+        return 'Promotion';
+    }
+  }
 }
 
 class ListingItem {
@@ -130,6 +141,64 @@ class ListingItem {
 
   String get displayPrice =>
       price != null ? 'RM ${price!.toStringAsFixed(2)}' : 'Free';
+
+  String get timeAgo {
+    final dt = createdAt;
+    if (dt == null) return '';
+
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+
+    if (diff.inDays >= 365) {
+      final years = (diff.inDays / 365).floor();
+      return '$years year${years > 1 ? 's' : ''} ago';
+    }
+    if (diff.inDays >= 30) {
+      final months = (diff.inDays / 30).floor();
+      return '$months month${months > 1 ? 's' : ''} ago';
+    }
+    if (diff.inDays > 0) {
+      return '${diff.inDays} day${diff.inDays > 1 ? 's' : ''} ago';
+    }
+    if (diff.inHours > 0) {
+      return '${diff.inHours} hour${diff.inHours > 1 ? 's' : ''} ago';
+    }
+    if (diff.inMinutes > 0) {
+      return '${diff.inMinutes} minute${diff.inMinutes > 1 ? 's' : ''} ago';
+    }
+    return 'Just now';
+  }
+
+  bool get isAvailable {
+    final s = status.toLowerCase().trim();
+    // treat these as not available
+    return !(s == 'sold' ||
+        s == 'exchanged' ||
+        s == 'completed' ||
+        s == 'unavailable' ||
+        s == 'inactive');
+  }
+
+  String get statusDisplayText {
+    final s = status.trim();
+    if (s.isEmpty) return 'Available';
+
+    switch (s.toLowerCase()) {
+      case 'available':
+        return 'Available';
+      case 'sold':
+        return 'Sold';
+      case 'exchanged':
+        return 'Exchanged';
+      case 'pending':
+        return 'Pending';
+      case 'completed':
+        return 'Completed';
+      default:
+        // Capitalize first letter
+        return s[0].toUpperCase() + s.substring(1);
+    }
+  }
 }
 
 class ReportItem {

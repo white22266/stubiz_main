@@ -54,18 +54,19 @@ class _AdminListingsPageState extends State<AdminListingsPage>
         isAdmin: true,
       ),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
 
         // Filter only Pending items
         final items = snapshot.data!.where((i) => !i.isApproved).toList();
 
-        if (items.isEmpty)
+        if (items.isEmpty) {
           return const EmptyState(
             title: 'All Caught Up',
             message: 'No pending business approvals.',
           );
-
+        }
         return ListView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {
@@ -127,16 +128,17 @@ class _AdminListingsPageState extends State<AdminListingsPage>
     return StreamBuilder<List<ListingItem>>(
       stream: MarketplaceService.streamListings(type),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final items = snapshot.data!;
 
-        if (items.isEmpty)
+        if (items.isEmpty) {
           return EmptyState(
             title: 'No Items',
             message: 'No ${type.displayName}s found.',
           );
-
+        }
         return ListView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {

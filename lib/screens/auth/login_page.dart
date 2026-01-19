@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import '../../main_navigation.dart'; // Student navigation
+import '../../student_navigation.dart'; // Student navigation
 import '../../admin_navigation.dart'; // Admin navigation
 import 'register_page.dart';
 
@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainNavigation()),
+          MaterialPageRoute(builder: (_) => const StudentNavigation()),
         );
       }
     } catch (e) {

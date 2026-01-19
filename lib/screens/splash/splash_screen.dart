@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import '../../main_navigation.dart'; // Student Nav
+import '../../student_navigation.dart'; // Student Nav
 import '../../admin_navigation.dart'; // Admin Nav
 import '../auth/login_page.dart';
 
@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const MainNavigation()),
+            MaterialPageRoute(builder: (_) => const StudentNavigation()),
           );
         }
       } catch (e) {

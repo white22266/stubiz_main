@@ -23,14 +23,17 @@ class PromotionHome extends StatelessWidget {
         // Automatically fetches ONLY approved promotions for students
         stream: MarketplaceService.streamListings(ListingType.promotion),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          if (snapshot.connectionState == ConnectionState.waiting)
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final items = snapshot.data ?? [];
-          if (items.isEmpty)
+          if (items.isEmpty) {
             return const Center(child: Text('No active promotions right now.'));
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(12),

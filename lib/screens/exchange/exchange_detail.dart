@@ -30,8 +30,11 @@ class ExchangeDetailScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              ChatRoomScreen(chatId: chatId, otherUserName: item.ownerName),
+          builder: (_) => ChatRoomScreen(
+            chatId: chatId,
+            otherUserId: item.ownerId,
+            otherUserName: item.ownerName,
+          ),
         ),
       );
     } catch (e) {

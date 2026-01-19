@@ -93,7 +93,9 @@ class _PromotionFormState extends State<PromotionForm> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.purple[50],
-                    border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                    border: Border.all(
+                      color: Colors.purple.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: _imageFile != null
                       ? Image.file(_imageFile!, fit: BoxFit.cover)
@@ -121,7 +123,7 @@ class _PromotionFormState extends State<PromotionForm> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField(
-                value: _category,
+                initialValue: _category,
                 items: _categories
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
