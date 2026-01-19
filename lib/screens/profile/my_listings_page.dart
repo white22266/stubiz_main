@@ -1,73 +1,68 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../models/listing_item.dart';
+import '../../services/marketplace_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/empty_state.dart';
 
 class MyListingsPage extends StatelessWidget {
-  const MyListingsPage({super.key});
+  final ListingType type;
+  const MyListingsPage({super.key, required this.type});
 
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    if (user == null) {
-      return const Scaffold(body: Center(child: Text('Not logged in.')));
-    }
-
-    final query = FirebaseFirestore.instance
-        .collection('listings')
-        .where('sellerId', isEqualTo: user.uid)
-        .orderBy('createdAt', descending: true);
+    if (user == null)
+      return const Scaffold(body: Center(child: Text('Error: Not logged in')));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Listings')),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: query.snapshots(),
-        builder: (context, snap) {
-          if (snap.hasError) {
-            return Center(child: Text('Failed to load: ${snap.error}'));
-          }
-          if (!snap.hasData) {
+      appBar: AppBar(
+        title: Text('My ${type.displayName}s'),
+      ), // e.g., My Products
+      body: StreamBuilder<List<ListingItem>>(
+        // NOTE: You might need to update marketplace_service.dart to accept 'ownerId' parameter in streamListings
+        // Or filter it client side. Assuming updated service from previous conversation handles filters.
+        stream: MarketplaceService.streamListings(type).map(
+          (items) => items.where((item) => item.ownerId == user.uid).toList(),
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting)
             return const Center(child: CircularProgressIndicator());
+          final items = snapshot.data ?? [];
+
+          if (items.isEmpty) {
+            return EmptyState(
+              title: 'No listings yet',
+              message:
+                  'You haven\'t posted any ${type.displayName.toLowerCase()} yet.',
+              icon: Icons.layers_clear,
+            );
           }
 
-          final docs = snap.data!.docs;
-          if (docs.isEmpty) {
-            return const Center(child: Text('No listings yet.'));
-          }
-
-          return ListView.separated(
+          return ListView.builder(
+            itemCount: items.length,
             padding: const EdgeInsets.all(12),
-            itemCount: docs.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, i) {
-              final d = docs[i];
-              final data = d.data();
-
-              final title = (data['title'] ?? '').toString();
-              final price = data['price'];
-              final priceText = price is num
-                  ? price.toStringAsFixed(2)
-                  : price?.toString() ?? '-';
-              final category = (data['category'] ?? '').toString();
-              final isActive = (data['isActive'] ?? true) == true;
-
+            itemBuilder: (context, index) {
+              final item = items[index];
               return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
                 child: ListTile(
-                  title: Text(title.isEmpty ? '(Untitled)' : title),
+                  leading: item.imageUrl != null
+                      ? Image.network(
+                          item.imageUrl!,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        )
+                      : const Icon(Icons.image),
+                  title: Text(item.name, maxLines: 1),
                   subtitle: Text(
-                    [
-                      if (category.isNotEmpty) category,
-                      'RM $priceText',
-                      isActive ? 'Active' : 'Inactive',
-                    ].join(' • '),
+                    item.statusDisplayText,
+                    style: TextStyle(
+                      color: item.isAvailable ? Colors.green : Colors.grey,
+                    ),
                   ),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () =>
-                        _confirmDeleteListing(context, d.reference),
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _confirmDelete(context, item),
                   ),
                 ),
               );
@@ -78,43 +73,26 @@ class MyListingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmDeleteListing(
-    BuildContext context,
-    DocumentReference<Map<String, dynamic>> ref,
-  ) async {
-    final ok = await showDialog<bool>(
+  void _confirmDelete(BuildContext context, ListingItem item) {
+    showDialog(
       context: context,
-      builder: (dialogCtx) {
-        return AlertDialog(
-          title: const Text('Delete Listing'),
-          content: const Text('Are you sure you want to delete this listing?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogCtx, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogCtx, true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Item?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await MarketplaceService.deleteItem(item.id, item.type);
+              if (context.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
-
-    if (ok != true) return;
-
-    try {
-      await ref.delete();
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Listing deleted.')));
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
-    }
   }
 }

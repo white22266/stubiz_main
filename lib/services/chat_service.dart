@@ -1,36 +1,91 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ChatService {
-  static String buildChatId(String a, String b) {
-    final list = [a, b]..sort();
-    return '${list[0]}_${list[1]}';
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  // 1. Start Chat (Ensures unique chat ID between two users)
+  static Future<String> startChat(
+    String otherUserId,
+    String otherUserName,
+  ) async {
+    final currentUserId = _auth.currentUser!.uid;
+    final List<String> ids = [currentUserId, otherUserId]..sort();
+    final chatId = '${ids[0]}_${ids[1]}';
+
+    final chatDoc = await _db.collection('chats').doc(chatId).get();
+    if (!chatDoc.exists) {
+      await _db.collection('chats').doc(chatId).set({
+        'participants': ids,
+        'names': {
+          currentUserId: _auth.currentUser!.displayName ?? 'Me',
+          otherUserId: otherUserName,
+        },
+        'lastMessage': '',
+        'lastMessageTime': FieldValue.serverTimestamp(),
+      });
+    }
+    return chatId;
   }
 
-  static Future<String> getOrCreateChat({
-    required String otherUid,
-    required String otherName,
+  // 2. Send Message (Text or Image)
+  static Future<void> sendMessage(
+    String chatId,
+    String text, {
+    File? imageFile,
   }) async {
-    final me = AuthService.currentUser;
-    if (me == null) throw Exception('Not logged in.');
+    final user = _auth.currentUser!;
+    String? imageUrl;
 
-    final chatId = buildChatId(me.uid, otherUid);
-    final ref = FirebaseFirestore.instance.collection('chats').doc(chatId);
+    if (imageFile != null) {
+      final ref = _storage.ref().child(
+        'chat_images/$chatId/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+    }
 
-    final snap = await ref.get();
-    if (snap.exists) return chatId;
-
-    await ref.set({
-      'participants': [me.uid, otherUid],
-      'participantNames': {
-        me.uid: (me.displayName ?? '').toString(),
-        otherUid: otherName,
-      },
-      'lastMessage': '',
-      'lastMessageAt': FieldValue.serverTimestamp(),
+    final messageData = {
+      'senderId': user.uid,
+      'senderName': user.displayName,
+      'text': text,
+      'imageUrl': imageUrl,
       'createdAt': FieldValue.serverTimestamp(),
-    });
+      'isRead': false,
+    };
 
-    return chatId;
+    await _db
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add(messageData);
+
+    // Update Chat Preview
+    await _db.collection('chats').doc(chatId).update({
+      'lastMessage': imageFile != null ? '[Image]' : text,
+      'lastMessageTime': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // 3. Streams
+  static Stream<QuerySnapshot> getChats() {
+    return _db
+        .collection('chats')
+        .where('participants', arrayContains: _auth.currentUser!.uid)
+        .orderBy('lastMessageTime', descending: true)
+        .snapshots();
+  }
+
+  static Stream<QuerySnapshot> getMessages(String chatId) {
+    return _db
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
   }
 }

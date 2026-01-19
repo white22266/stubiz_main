@@ -1,109 +1,145 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../models/product.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../services/marketplace_service.dart';
 
-class AddProduct extends StatefulWidget {
-  final Product? product;
-
-  const AddProduct({super.key, this.product});
+class AddProductScreen extends StatefulWidget {
+  const AddProductScreen({super.key});
 
   @override
-  State<AddProduct> createState() => _AddProductState();
+  State<AddProductScreen> createState() => _AddProductScreenState();
 }
 
-class _AddProductState extends State<AddProduct> {
-  final nameCtrl = TextEditingController();
-  final priceCtrl = TextEditingController();
-  final descCtrl = TextEditingController();
+class _AddProductScreenState extends State<AddProductScreen> {
+  final _formKey = GlobalKey<FormState>();
+  String _name = '';
+  double _price = 0.0;
+  String _desc = '';
+  String _category = 'Electronics';
+  File? _imageFile;
+  bool _isLoading = false;
 
-  final categories = ['Books', 'Electronics', 'Stationery', 'Services', 'Others'];
-  String selectedCategory = 'Books';
+  final List<String> _categories = [
+    'Electronics',
+    'Books',
+    'Clothing',
+    'Food',
+    'Others',
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.product != null) {
-      nameCtrl.text = widget.product!.name;
-      priceCtrl.text = widget.product!.price.toString();
-      descCtrl.text = widget.product!.description;
-      selectedCategory = widget.product!.category;
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _imageFile = File(picked.path));
     }
   }
 
-  @override
-  void dispose() {
-    nameCtrl.dispose();
-    priceCtrl.dispose();
-    descCtrl.dispose();
-    super.dispose();
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
+
+    setState(() => _isLoading = true);
+    try {
+      await MarketplaceService.createProduct(
+        name: _name,
+        price: _price,
+        description: _desc,
+        category: _category,
+        imageFile: _imageFile,
+      );
+      if (!mounted) return;
+      Navigator.pop(context); // Close screen
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.product != null;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? 'Edit Product' : 'Add Product'),
-      ),
-      body: Padding(
+      appBar: AppBar(title: const Text('Sell Item')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Product Name'),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: selectedCategory,
-              decoration: const InputDecoration(labelText: 'Category'),
-              items: categories
-                  .map((c) =>
-                      DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
-              onChanged: (v) => setState(() => selectedCategory = v!),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: priceCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Price'),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: descCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Description'),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submit,
-              child: Text(isEdit ? 'Update' : 'Post'),
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: _imageFile != null
+                      ? Image.file(_imageFile!, fit: BoxFit.cover)
+                      : const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.camera_alt),
+                            Text('Tap to add photo'),
+                          ],
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+                onSaved: (v) => _name = v!,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Price (RM)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+                onSaved: (v) => _price = double.parse(v!),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField(
+                value: _category,
+                items: _categories
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (v) => setState(() => _category = v.toString()),
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+                onSaved: (v) => _desc = v!,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Post Product'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  void _submit() {
-    if (nameCtrl.text.isEmpty ||
-        priceCtrl.text.isEmpty ||
-        descCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
-    final product = Product(
-      id: widget.product?.id ?? DateTime.now().toString(),
-      name: nameCtrl.text,
-      price: double.tryParse(priceCtrl.text) ?? 0,
-      description: descCtrl.text,
-      category: selectedCategory,
-    );
-
-    Navigator.pop(context, product);
   }
 }

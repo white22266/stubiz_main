@@ -1,119 +1,130 @@
 import 'package:flutter/material.dart';
+import '../../models/listing_item.dart';
+import '../../services/marketplace_service.dart';
 import 'promotion_detail.dart';
+import 'promotion_form.dart';
 
-class PromotionHome extends StatefulWidget {
+class PromotionHome extends StatelessWidget {
   const PromotionHome({super.key});
 
   @override
-  State<PromotionHome> createState() => _PromotionHomeState();
-}
-
-class _PromotionHomeState extends State<PromotionHome> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Student Businesses'),
+      appBar: AppBar(title: const Text('Student Businesses')),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.store),
+        label: const Text('Promote Business'),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PromotionForm()),
+        ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.delayed(const Duration(seconds: 1));
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Promotions refreshed')),
-          );
-        },
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: 4,
-          itemBuilder: (context, index) {
-            return InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const PromotionDetail(),
-                    transitionsBuilder: (_, animation, __, child) {
-                      return SlideTransition(
-                        position: Tween(
-                          begin: const Offset(1, 0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
-                  ),
-                );
-              },
-              onLongPress: () {
-                _showActionSheet(context);
-              },
-              child: Card(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                elevation: 3,
+      body: StreamBuilder<List<ListingItem>>(
+        // Automatically fetches ONLY approved promotions for students
+        stream: MarketplaceService.streamListings(ListingType.promotion),
+        builder: (context, snapshot) {
+          if (snapshot.hasError)
+            return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return const Center(child: CircularProgressIndicator());
+
+          final items = snapshot.data ?? [];
+          if (items.isEmpty)
+            return const Center(child: Text('No active promotions right now.'));
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return Card(
+                elevation: 4,
+                margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.storefront),
+                child: InkWell(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PromotionDetailScreen(item: item),
+                    ),
                   ),
-                  title: const Text(
-                    'Printing Service',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Business Banner
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        child: Container(
+                          height: 150,
+                          width: double.infinity,
+                          color: Colors.purple[100],
+                          child: item.imageUrl != null
+                              ? Image.network(item.imageUrl!, fit: BoxFit.cover)
+                              : const Icon(
+                                  Icons.store,
+                                  size: 50,
+                                  color: Colors.purple,
+                                ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.category,
+                              style: TextStyle(
+                                color: Colors.purple[700],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            const SizedBox(height: 8),
+                            if (item.location != null)
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.location!,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  subtitle:
-                      const Text('Affordable campus printing'),
-                  trailing: const Icon(Icons.chevron_right),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          );
+        },
       ),
-    );
-  }
-
-  // BOTTOM ACTION SHEET
-  void _showActionSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.chat),
-                title: const Text('Chat Business Owner'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Opening chat...')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.share),
-                title: const Text('Share Business'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Business shared')),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

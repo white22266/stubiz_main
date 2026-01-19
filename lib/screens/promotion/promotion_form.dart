@@ -3,27 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/marketplace_service.dart';
 
-class ExchangeForm extends StatefulWidget {
-  const ExchangeForm({super.key});
+class PromotionForm extends StatefulWidget {
+  const PromotionForm({super.key});
 
   @override
-  State<ExchangeForm> createState() => _ExchangeFormState();
+  State<PromotionForm> createState() => _PromotionFormState();
 }
 
-class _ExchangeFormState extends State<ExchangeForm> {
+class _PromotionFormState extends State<PromotionForm> {
   final _formKey = GlobalKey<FormState>();
-  String _title = '';
-  String _wantedItem = '';
+  String _businessName = '';
   String _desc = '';
-  String _category = 'Electronics';
+  String _category = 'Food & Beverage';
+  String? _website;
+  String? _location;
   File? _imageFile;
   bool _isLoading = false;
 
   final List<String> _categories = [
-    'Electronics',
-    'Books',
-    'Clothing',
-    'Furniture',
+    'Food & Beverage',
+    'Services',
+    'Tutoring',
+    'Handmade',
     'Others',
   ];
 
@@ -38,12 +39,31 @@ class _ExchangeFormState extends State<ExchangeForm> {
 
     setState(() => _isLoading = true);
     try {
-      await MarketplaceService.createExchange(
-        title: _title,
-        wantedItem: _wantedItem,
+      await MarketplaceService.createPromotion(
+        businessName: _businessName,
         description: _desc,
         category: _category,
+        website: _website,
+        location: _location,
         imageFile: _imageFile,
+      );
+
+      if (!mounted) return;
+      // Show Approval Alert
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Submission Received'),
+          content: const Text(
+            'Your promotion has been submitted and is pending Admin approval. It will appear once approved.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
       if (!mounted) return;
       Navigator.pop(context);
@@ -59,32 +79,33 @@ class _ExchangeFormState extends State<ExchangeForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Post Exchange')),
+      appBar: AppBar(title: const Text('Promote Business')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
                 onTap: _pickImage,
                 child: Container(
                   height: 150,
+                  width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.purple[50],
+                    border: Border.all(color: Colors.purple.withOpacity(0.3)),
                   ),
                   child: _imageFile != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(_imageFile!, fit: BoxFit.cover),
-                        )
+                      ? Image.file(_imageFile!, fit: BoxFit.cover)
                       : const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo),
-                            Text('Add Photo'),
+                            Icon(
+                              Icons.add_business,
+                              size: 40,
+                              color: Colors.purple,
+                            ),
+                            Text('Add Business Logo/Banner'),
                           ],
                         ),
                 ),
@@ -92,20 +113,11 @@ class _ExchangeFormState extends State<ExchangeForm> {
               const SizedBox(height: 16),
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: 'What do you have? (Title)',
+                  labelText: 'Business Name',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) => v!.isEmpty ? 'Required' : null,
-                onSaved: (v) => _title = v!,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'What do you want? (Wanted Item)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-                onSaved: (v) => _wantedItem = v!,
+                onSaved: (v) => _businessName = v!,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField(
@@ -122,22 +134,42 @@ class _ExchangeFormState extends State<ExchangeForm> {
               const SizedBox(height: 16),
               TextFormField(
                 decoration: const InputDecoration(
-                  labelText: 'Description (Condition, etc.)',
+                  labelText: 'Description (Services, Hours, etc.)',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 4,
                 validator: (v) => v!.isEmpty ? 'Required' : null,
                 onSaved: (v) => _desc = v!,
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.all(16),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Location (e.g., G3 Library)',
+                  border: OutlineInputBorder(),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Post Exchange'),
+                onSaved: (v) => _location = v,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Website / Instagram Link (Optional)',
+                  border: OutlineInputBorder(),
+                ),
+                onSaved: (v) => _website = v,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Submit for Approval'),
+                ),
               ),
             ],
           ),

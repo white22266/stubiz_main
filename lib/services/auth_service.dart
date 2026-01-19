@@ -2,107 +2,90 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
-  AuthService._();
-
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static User? get currentUser => _auth.currentUser;
 
-  static Future<void> logout() => _auth.signOut();
-
-  static Future<void> registerEmailPassword({
-    required String displayName,
+  // 1. Register with UTHM Email Validation
+  static Future<void> register({
     required String email,
     required String password,
+    required String displayName,
   }) async {
+    final emailTrimmed = email.trim().toLowerCase();
+
+    // Strict UTHM Email Check
+    if (!emailTrimmed.endsWith('@student.uthm.edu.my') &&
+        !emailTrimmed.endsWith('@uthm.edu.my')) {
+      throw FirebaseAuthException(
+        code: 'invalid-email-domain',
+        message:
+            'Registration is restricted to UTHM students (@student.uthm.edu.my).',
+      );
+    }
+
+    if (password.length < 6) {
+      throw FirebaseAuthException(
+        code: 'weak-password',
+        message: 'Password must be at least 6 chars.',
+      );
+    }
+
     final cred = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
+      email: emailTrimmed,
       password: password,
     );
-    await cred.user!.updateDisplayName(displayName.trim());
-    // Activation step: send verification link
+    await cred.user!.updateDisplayName(displayName);
     await cred.user!.sendEmailVerification();
 
-    // Create user profile in Firestore
+    // Create Profile in Firestore
     await _db.collection('users').doc(cred.user!.uid).set({
-      'email': cred.user!.email,
-      'displayName': displayName.trim(),
-      'role': 'student',
-      'emailVerified': false,
+      'email': emailTrimmed,
+      'displayName': displayName,
+      'role': 'student', // Default role
+      'isActive': true,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  static Future<void> resendActivationEmail() async {
-    final user = _auth.currentUser;
-    if (user == null) return;
-    if (user.emailVerified) return;
-    await user.sendEmailVerification();
-  }
-
-  static Future<bool> reloadAndCheckEmailVerified() async {
-    final user = _auth.currentUser;
-    if (user == null) return false;
-
-    await user.reload();
-    final refreshed = _auth.currentUser;
-    if (refreshed == null) return false;
-
-    // Sync to Firestore
-    await _db.collection('users').doc(refreshed.uid).set({
-      'emailVerified': refreshed.emailVerified,
-    }, SetOptions(merge: true));
-
-    return refreshed.emailVerified;
-  }
-
-  static Future<void> loginEmailPassword({
+  // 2. Login with Role & Verification Check
+  static Future<void> login({
     required String email,
     required String password,
-    required String expectedRole,
   }) async {
     final cred = await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
 
-    // Must verify email first
     if (!cred.user!.emailVerified) {
       await _auth.signOut();
       throw FirebaseAuthException(
-        code: 'email-not-verified',
-        message: 'Email not verified. Please activate your account via email.',
+        code: 'unverified',
+        message: 'Please verify your email first.',
       );
     }
 
-    final snap = await _db.collection('users').doc(cred.user!.uid).get();
-    if (!snap.exists) {
+    // Check if account is active/banned
+    final doc = await _db.collection('users').doc(cred.user!.uid).get();
+    if (doc.exists && doc.data()?['isActive'] == false) {
       await _auth.signOut();
-      throw Exception('User profile not found in Firestore.');
+      throw FirebaseAuthException(
+        code: 'disabled',
+        message: 'Your account has been disabled by Admin.',
+      );
     }
-
-    final role = (snap.data()!['role'] ?? '').toString();
-    if (role != expectedRole) {
-      await _auth.signOut();
-      throw Exception('Role mismatch. Please select the correct login type.');
-    }
-
-    await _db.collection('users').doc(cred.user!.uid).set({
-      'emailVerified': true,
-    }, SetOptions(merge: true));
   }
 
-  static Future<void> sendResetPasswordEmail(String email) async {
-    await _auth.sendPasswordResetEmail(email: email.trim());
-  }
+  static Future<void> logout() => _auth.signOut();
 
-  static Future<String> getCurrentUserRole() async {
+  // Helper: Get Current Role
+  static Future<String> getCurrentRole() async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Not logged in.');
-    final snap = await _db.collection('users').doc(user.uid).get();
-    if (!snap.exists) throw Exception('User profile not found.');
-    return (snap.data()!['role'] ?? '').toString();
+    if (user == null) return 'guest';
+    final doc = await _db.collection('users').doc(user.uid).get();
+    return doc.data()?['role'] ?? 'student';
   }
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import 'verify_email_page.dart';
-import '../../widgets/auth_widgets.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -11,185 +9,96 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final nameCtrl = TextEditingController();
-  final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
-  final confirmCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _isLoading = false;
 
-  bool hidePass = true;
-  bool loading = false;
-  String errorText = '';
-
-  @override
-  void dispose() {
-    nameCtrl.dispose();
-    emailCtrl.dispose();
-    passCtrl.dispose();
-    confirmCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _signup() async {
-    setState(() {
-      loading = true;
-      errorText = '';
-    });
-
+  Future<void> _handleRegister() async {
+    setState(() => _isLoading = true);
     try {
-      final name = nameCtrl.text.trim();
-      final email = emailCtrl.text.trim();
-      final pass = passCtrl.text;
-      final confirm = confirmCtrl.text;
-
-      if (name.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
-        throw Exception('Please fill in all fields.');
-      }
-      if (pass != confirm) {
-        throw Exception('Passwords do not match.');
-      }
-
-      // IMPORTANT: use your existing AuthService signature
-      await AuthService.registerEmailPassword(
-        displayName: name,
-        email: email,
-        password: pass,
+      await AuthService.register(
+        displayName: _nameCtrl.text,
+        email: _emailCtrl.text,
+        password: _passCtrl.text,
       );
-
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const VerifyEmailPage()),
+
+      // Success Dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Registration Successful'),
+          content: const Text(
+            'A verification link has been sent to your UTHM email. Please verify before logging in.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx); // Close dialog
+                Navigator.pop(context); // Go back to login
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
     } catch (e) {
-      if (mounted) {
-        setState(() => errorText = e.toString());
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
-      // IMPORTANT: no "return" inside finally
-      if (mounted) {
-        setState(() => loading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              children: [
-                const SizedBox(height: 10),
-                const AuthHeader(
-                  title: 'Get On Board!',
-                  subtitle: 'Create your profile to start your journey.',
-                ),
-                const SizedBox(height: 16),
-
-                Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE5E5E5)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.school_outlined,
-                        size: 20,
-                        color: Colors.black54,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Student',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                RoundedField(
-                  controller: nameCtrl,
-                  hint: 'Full Name',
-                  icon: Icons.person_outline,
-                ),
-                const SizedBox(height: 12),
-
-                RoundedField(
-                  controller: emailCtrl,
-                  hint: 'E-Mail',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 12),
-
-                RoundedField(
-                  controller: passCtrl,
-                  hint: 'Password',
-                  icon: Icons.lock_outline,
-                  obscure: hidePass,
-                  suffix: IconButton(
-                    onPressed: () => setState(() => hidePass = !hidePass),
-                    icon: Icon(
-                      hidePass ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                RoundedField(
-                  controller: confirmCtrl,
-                  hint: 'Confirm Password',
-                  icon: Icons.lock_outline,
-                  obscure: true,
-                ),
-
-                if (errorText.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Text(errorText, style: const TextStyle(color: Colors.red)),
-                ],
-
-                const SizedBox(height: 12),
-                PrimaryButton(
-                  text: 'Signup',
-                  onPressed: loading ? null : _signup,
-                  loading: loading,
-                ),
-
-                const SizedBox(height: 22),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an Account? ',
-                      style: TextStyle(color: Colors.grey.shade700),
-                    ),
-                    GestureDetector(
-                      onTap: loading ? null : () => Navigator.pop(context),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Color(0xFF1A73E8),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+      appBar: AppBar(title: const Text('Register')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Full Name',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _emailCtrl,
+              decoration: const InputDecoration(
+                labelText: 'UTHM Email (@student.uthm.edu.my)',
+                border: OutlineInputBorder(),
+                hintText: 'example@student.uthm.edu.my',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password (Min 6 chars)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _handleRegister,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Register'),
+              ),
+            ),
+          ],
         ),
       ),
     );

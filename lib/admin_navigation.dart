@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'screens/admin/admin_dashboard_page.dart';
 import 'screens/admin/admin_users_page.dart';
 import 'screens/admin/admin_listings_page.dart';
-import 'screens/admin/admin_reports_page.dart';
-import 'screens/admin/admin_settings_page.dart';
+import 'screens/profile/profile_page.dart'; // Reuse generic profile for logout
 
 class AdminNavigation extends StatefulWidget {
   const AdminNavigation({super.key});
@@ -14,44 +12,32 @@ class AdminNavigation extends StatefulWidget {
 }
 
 class _AdminNavigationState extends State<AdminNavigation> {
-  int index = 0;
+  int _selectedIndex = 0;
 
-  final pages = const [
-    AdminDashboardPage(),
-    AdminUsersPage(),
-    AdminListingsPage(),
-    AdminReportsPage(),
-    AdminSettingsPage(),
+  final List<Widget> _pages = [
+    const AdminDashboardPage(),
+    const AdminUsersPage(),
+    const AdminListingsPage(),
+    const ProfilePage(), // Admin uses the same profile page to logout
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: index, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (v) => setState(() => index = v),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.redAccent, // Admin color distinction
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            label: 'Users',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
-            label: 'Listings',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.report_outlined),
-            label: 'Reports',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Users'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Content'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
