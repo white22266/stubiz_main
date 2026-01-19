@@ -22,15 +22,16 @@ class ExchangeHome extends StatelessWidget {
       body: StreamBuilder<List<ListingItem>>(
         stream: MarketplaceService.streamListings(ListingType.exchange),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          if (snapshot.connectionState == ConnectionState.waiting)
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-
+          }
           final items = snapshot.data ?? [];
-          if (items.isEmpty)
+          if (items.isEmpty) {
             return const Center(child: Text('No items available for exchange'));
-
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(12),
             itemCount: items.length,

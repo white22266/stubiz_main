@@ -92,12 +92,13 @@ class ListingItem {
 
     // Name handling based on type
     String extractedName = '';
-    if (type == ListingType.product)
+    if (type == ListingType.product) {
       extractedName = data['name'] ?? '';
-    else if (type == ListingType.exchange)
+    } else if (type == ListingType.exchange) {
       extractedName = data['title'] ?? '';
-    else if (type == ListingType.promotion)
+    } else if (type == ListingType.promotion) {
       extractedName = data['businessName'] ?? '';
+    }
 
     return ListingItem(
       id: doc.id,
