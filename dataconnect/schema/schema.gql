@@ -1,0 +1,41 @@
+type User @table {
+  username: String!
+  email: String!
+  createdAt: Timestamp!
+  bio: String
+  profilePictureUrl: String
+}
+
+type Question @table {
+  title: String!
+  body: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  viewCount: Int
+  author: User
+}
+
+type Answer @table {
+  body: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  author: User
+  question: Question
+}
+
+type Tag @table {
+  name: String!
+}
+
+type QuestionTag @table(key: ["question", "tag"]) {
+  question: Question!
+  tag: Tag!
+}
+
+type Vote @table {
+  type: String!
+  createdAt: Timestamp!
+  voter: User
+  question: Question
+  answer: Answer
+}

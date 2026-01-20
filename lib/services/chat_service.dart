@@ -10,7 +10,68 @@ class ChatService {
 
   static String _me() => _auth.currentUser!.uid;
 
-  // 1) Start Chat (unique chat id for 2 users)
+  // ---------- Helpers ----------
+  // Source of truth: users/{uid}.displayName
+  // Fallback: FirebaseAuth displayName
+  // Final fallback: "Student"
+  static Future<String> _getDisplayName(String uid) async {
+    // 1) Firestore users collection
+    try {
+      final doc = await _db.collection('users').doc(uid).get();
+      final name = (doc.data()?['displayName'] ?? '').toString().trim();
+      if (name.isNotEmpty) return name;
+    } catch (_) {}
+
+    // 2) FirebaseAuth (only valid for current user)
+    if (_auth.currentUser != null && _auth.currentUser!.uid == uid) {
+      final authName = (_auth.currentUser!.displayName ?? '').toString().trim();
+      if (authName.isNotEmpty) return authName;
+    }
+
+    return 'Student';
+  }
+
+  static Future<String> _myName() async => _getDisplayName(_me());
+
+  // Ensure chat doc has names filled, so ChatList won't show Unknown.
+  // - Merge names map
+  // - Do not overwrite existing non-empty names
+  static Future<void> _ensureChatNames(
+    DocumentReference<Map<String, dynamic>> chatRef,
+    String myUid,
+    String otherUid, {
+    String? otherNameHint,
+  }) async {
+    final snap = await chatRef.get();
+    final data = snap.data() ?? {};
+
+    final existingNames = (data['names'] is Map)
+        ? Map<String, dynamic>.from(data['names'] as Map)
+        : <String, dynamic>{};
+
+    final myExisting = (existingNames[myUid] ?? '').toString().trim();
+    final otherExisting = (existingNames[otherUid] ?? '').toString().trim();
+
+    final myName = myExisting.isNotEmpty
+        ? myExisting
+        : await _getDisplayName(myUid);
+
+    String otherName = otherExisting;
+    if (otherName.isEmpty) {
+      final hint = (otherNameHint ?? '').trim();
+      if (hint.isNotEmpty) {
+        otherName = hint;
+      } else {
+        otherName = await _getDisplayName(otherUid);
+      }
+    }
+
+    await chatRef.set({
+      'names': {myUid: myName, otherUid: otherName},
+    }, SetOptions(merge: true));
+  }
+
+  // ---------- 1) Start Chat (unique chat id for 2 users) ----------
   static Future<String> startChat(
     String otherUserId,
     String otherUserName,
@@ -23,23 +84,33 @@ class ChatService {
     final doc = await ref.get();
 
     if (!doc.exists) {
+      final myName = await _myName();
+      final otherName = otherUserName.trim().isNotEmpty
+          ? otherUserName.trim()
+          : await _getDisplayName(otherUserId);
+
       await ref.set({
         'participants': ids,
-        'names': {
-          myUid: _auth.currentUser!.displayName ?? 'Me',
-          otherUserId: otherUserName,
-        },
+        'names': {myUid: myName, otherUserId: otherName},
         'lastMessage': '',
         'lastMessageType': 'text',
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderId': '',
       });
+    } else {
+      // Backfill names if old chat doc is missing/empty names
+      await _ensureChatNames(
+        ref,
+        myUid,
+        otherUserId,
+        otherNameHint: otherUserName,
+      );
     }
 
     return chatId;
   }
 
-  // 2) Streams (typed)
+  // ---------- 2) Streams (typed) ----------
   static Stream<QuerySnapshot<Map<String, dynamic>>> getChats() {
     final myUid = _me();
     return _db
@@ -60,37 +131,44 @@ class ChatService {
         .snapshots();
   }
 
-  // 3) Send Text
+  // ---------- 3) Send Text ----------
   static Future<void> sendText(String chatId, String text) async {
     final user = _auth.currentUser!;
+    final myUid = user.uid;
+    final senderName = await _myName();
+
     final chatRef = _db.collection('chats').doc(chatId);
     final msgRef = chatRef.collection('messages').doc();
-
     final now = FieldValue.serverTimestamp();
 
     await _db.runTransaction((tx) async {
       tx.set(msgRef, {
-        'senderId': user.uid,
-        'senderName': user.displayName ?? 'Me',
+        'senderId': myUid,
+        'senderName': senderName, // <-- fixed
         'type': 'text',
         'text': text,
         'imageUrl': null,
         'createdAt': now,
-        'readBy': [user.uid],
+        'readBy': [myUid],
       });
 
       tx.update(chatRef, {
         'lastMessage': text,
         'lastMessageType': 'text',
         'lastMessageTime': now,
-        'lastSenderId': user.uid,
+        'lastSenderId': myUid,
+        // Ensure my name in chat doc is not "Me"/empty
+        'names.$myUid': senderName,
       });
     });
   }
 
-  // 4) Send Image
+  // ---------- 4) Send Image ----------
   static Future<void> sendImage(String chatId, File imageFile) async {
     final user = _auth.currentUser!;
+    final myUid = user.uid;
+    final senderName = await _myName();
+
     final chatRef = _db.collection('chats').doc(chatId);
     final msgRef = chatRef.collection('messages').doc();
 
@@ -102,25 +180,27 @@ class ChatService {
 
     await _db.runTransaction((tx) async {
       tx.set(msgRef, {
-        'senderId': user.uid,
-        'senderName': user.displayName ?? 'Me',
+        'senderId': myUid,
+        'senderName': senderName, // <-- fixed
         'type': 'image',
         'text': null,
         'imageUrl': imageUrl,
         'createdAt': now,
-        'readBy': [user.uid],
+        'readBy': [myUid],
       });
 
       tx.update(chatRef, {
         'lastMessage': '[Image]',
         'lastMessageType': 'image',
         'lastMessageTime': now,
-        'lastSenderId': user.uid,
+        'lastSenderId': myUid,
+        // Ensure my name in chat doc is not "Me"/empty
+        'names.$myUid': senderName,
       });
     });
   }
 
-  // 5) Mark read (mark latest N messages as read by me)
+  // ---------- 5) Mark read ----------
   static Future<void> markChatRead(String chatId, {int limit = 50}) async {
     final myUid = _me();
     final snap = await _db

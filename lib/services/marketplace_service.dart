@@ -105,7 +105,7 @@ class MarketplaceService {
     await _createListing(
       type: ListingType.promotion,
       data: {
-        'name': businessName,
+        'businessName': businessName,
         'description': description,
         'category': category,
         'website': (website != null && website.trim().isNotEmpty)
