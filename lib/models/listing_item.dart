@@ -64,6 +64,7 @@ class ListingItem {
   final String? wantedItem; // For Exchange
   final String? website; // For Promotion
   final String? location; // For Promotion
+  final GeoPoint? geo; // coordinates
   final bool isApproved; // For Promotion (Admin control)
 
   final DateTime? createdAt;
@@ -90,6 +91,7 @@ class ListingItem {
     this.wantedItem,
     this.website,
     this.location,
+    this.geo,
     this.isApproved = false,
     this.createdAt,
     this.isFavorite = false,
@@ -132,6 +134,7 @@ class ListingItem {
       wantedItem: data['wantedItem'] as String?,
       website: data['website'] as String?,
       location: data['location'] as String?,
+      geo: data['geo'] is GeoPoint ? data['geo'] as GeoPoint : null,
       isApproved: data['isApproved'] == true,
       createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()

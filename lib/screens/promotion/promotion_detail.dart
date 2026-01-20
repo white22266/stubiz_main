@@ -1,4 +1,11 @@
+// lib/screens/promotion/promotion_detail.dart
+// Optional: show coordinates + open in Google Maps.
+// Replace your PromotionDetailScreen with this version (or merge changes).
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../models/listing_item.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
@@ -9,7 +16,6 @@ class PromotionDetailScreen extends StatelessWidget {
   const PromotionDetailScreen({super.key, required this.item});
 
   Future<void> _contactOwner(BuildContext context) async {
-    // Similar to product/exchange chat logic
     final user = AuthService.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(
@@ -17,9 +23,11 @@ class PromotionDetailScreen extends StatelessWidget {
       ).showSnackBar(const SnackBar(content: Text('Login required')));
       return;
     }
+
     try {
       final chatId = await ChatService.startChat(item.ownerId, item.ownerName);
       if (!context.mounted) return;
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -37,8 +45,30 @@ class PromotionDetailScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _openInMaps(BuildContext context) async {
+    final GeoPoint? geo = item.geo;
+    if (geo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No coordinates available.')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${geo.latitude},${geo.longitude}',
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open Maps.')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasGeo = item.geo != null;
+
     return Scaffold(
       appBar: AppBar(title: Text(item.name)),
       body: SingleChildScrollView(
@@ -89,12 +119,27 @@ class PromotionDetailScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
+
                   if (item.location != null)
                     ListTile(
                       leading: const Icon(Icons.location_on),
                       title: Text(item.location!),
                       contentPadding: EdgeInsets.zero,
                     ),
+
+                  if (hasGeo)
+                    ListTile(
+                      leading: const Icon(Icons.pin_drop),
+                      title: Text(
+                        'Lat: ${item.geo!.latitude}, Lng: ${item.geo!.longitude}',
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                      trailing: TextButton(
+                        onPressed: () => _openInMaps(context),
+                        child: const Text('Open'),
+                      ),
+                    ),
+
                   if (item.website != null)
                     ListTile(
                       leading: const Icon(Icons.link),
@@ -113,6 +158,7 @@ class PromotionDetailScreen extends StatelessWidget {
                     style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
                   const SizedBox(height: 24),
+
                   const Text(
                     'Owner',
                     style: TextStyle(
