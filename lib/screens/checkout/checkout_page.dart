@@ -16,7 +16,7 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
   final CartService _cartService = CartService();
-
+  
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   final _notesController = TextEditingController();
@@ -48,7 +48,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const Text('Checkout'),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -85,12 +87,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
         children: [
           const Text(
             'Order Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             '${_cartService.totalQuantity} item${_cartService.totalQuantity > 1 ? 's' : ''} in your cart',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 12),
           ...(_cartService.items.take(3).map((item) => _buildOrderItem(item))),
@@ -135,7 +143,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
           Text(
             'RM ${item.totalPrice.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -150,7 +161,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         children: [
           const Text(
             'Shipping Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -212,7 +226,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         children: [
           const Text(
             'Payment Method',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           ...methods.map((method) => _buildPaymentMethodTile(method)),
@@ -231,7 +248,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Expanded(
                   child: Text(
                     'This is a sandbox/test payment. No real money will be charged.',
-                    style: TextStyle(fontSize: 12, color: Colors.blue[900]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue[900],
+                    ),
                   ),
                 ),
               ],
@@ -298,7 +318,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
         children: [
           const Text(
             'Price Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           _buildPriceRow('Subtotal', _cartService.subtotal),
@@ -341,7 +364,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
