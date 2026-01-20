@@ -78,28 +78,16 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(height: 24),
           Text(
             'Your cart is empty',
-<<<<<<< HEAD
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
-=======
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 12),
           Text(
             'Add items to get started',
-<<<<<<< HEAD
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
-=======
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[500],
-                ),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 32),
           FilledButton.icon(
@@ -156,14 +144,7 @@ class _CartPageState extends State<CartPage> {
                   const SizedBox(height: 4),
                   Text(
                     'Seller: ${item.sellerName}',
-<<<<<<< HEAD
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
-=======
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                    ),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -227,14 +208,7 @@ class _CartPageState extends State<CartPage> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               '${item.quantity}',
-<<<<<<< HEAD
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-=======
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
             ),
           ),
           IconButton(
@@ -254,11 +228,7 @@ class _CartPageState extends State<CartPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-<<<<<<< HEAD
             color: Colors.black.withValues(alpha: 0.1),
-=======
-            color: Colors.black.withOpacity(0.1),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -356,15 +326,9 @@ class _CartPageState extends State<CartPage> {
             onPressed: () {
               _cartService.clearCart();
               Navigator.pop(context);
-<<<<<<< HEAD
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(const SnackBar(content: Text('Cart cleared')));
-=======
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cart cleared')),
-              );
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
             },
             child: const Text('Clear'),
           ),
@@ -376,13 +340,7 @@ class _CartPageState extends State<CartPage> {
   void _proceedToCheckout() {
     Navigator.push(
       context,
-<<<<<<< HEAD
       MaterialPageRoute(builder: (context) => const CheckoutPage()),
-=======
-      MaterialPageRoute(
-        builder: (context) => const CheckoutPage(),
-      ),
->>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
     );
   }
 }
