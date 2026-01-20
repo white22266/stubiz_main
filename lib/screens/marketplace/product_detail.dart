@@ -1,13 +1,90 @@
 import 'package:flutter/material.dart';
 import '../../models/listing_item.dart';
+import '../../models/cart_item.dart';
 import '../../services/chat_service.dart';
 import '../../services/marketplace_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/cart_service.dart';
 import '../chat/chat_room.dart';
+import '../cart/cart_page.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final ListingItem item;
   const ProductDetailScreen({super.key, required this.item});
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  final CartService _cartService = CartService();
+  bool _isInCart = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkCartStatus();
+  }
+
+  void _checkCartStatus() {
+    setState(() {
+      _isInCart = _cartService.isInCart(widget.item.id);
+    });
+  }
+
+  Future<void> _addToCart() async {
+    final currentUser = AuthService.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login first')),
+      );
+      return;
+    }
+
+    if (currentUser.uid == widget.item.ownerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot buy your own product')),
+      );
+      return;
+    }
+
+    if (!widget.item.isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This product is not available')),
+      );
+      return;
+    }
+
+    try {
+      final cartItem = CartItem.fromListing(widget.item);
+      await _cartService.addItem(cartItem);
+      setState(() {
+        _isInCart = true;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Added to cart'),
+            action: SnackBarAction(
+              label: 'View Cart',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CartPage()),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
 
   Future<void> _contactSeller(BuildContext context) async {
     final currentUser = AuthService.currentUser;
@@ -17,7 +94,7 @@ class ProductDetailScreen extends StatelessWidget {
       ).showSnackBar(const SnackBar(content: Text('Please login first')));
       return;
     }
-    if (currentUser.uid == item.ownerId) {
+    if (currentUser.uid == widget.item.ownerId) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('This is your product')));
@@ -26,15 +103,15 @@ class ProductDetailScreen extends StatelessWidget {
 
     // Start Chat
     try {
-      final chatId = await ChatService.startChat(item.ownerId, item.ownerName);
+      final chatId = await ChatService.startChat(widget.item.ownerId, widget.item.ownerName);
       if (!context.mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ChatRoomScreen(
             chatId: chatId,
-            otherUserId: item.ownerId,
-            otherUserName: item.ownerName,
+            otherUserId: widget.item.ownerId,
+            otherUserName: widget.item.ownerName,
           ),
         ),
       );
@@ -64,8 +141,8 @@ class ProductDetailScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 MarketplaceService.reportItem(
-                  item.id,
-                  item.type.value,
+                  widget.item.id,
+                  widget.item.type.value,
                   reasonCtrl.text,
                 );
                 Navigator.pop(ctx);
@@ -85,7 +162,7 @@ class ProductDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(item.name),
+        title: Text(widget.item.name),
         actions: [
           IconButton(
             icon: const Icon(Icons.flag),
@@ -101,8 +178,8 @@ class ProductDetailScreen extends StatelessWidget {
               height: 250,
               width: double.infinity,
               color: Colors.grey[200],
-              child: item.imageUrl != null
-                  ? Image.network(item.imageUrl!, fit: BoxFit.cover)
+              child: widget.item.imageUrl != null
+                  ? Image.network(widget.item.imageUrl!, fit: BoxFit.cover)
                   : const Center(
                       child: Icon(Icons.image, size: 60, color: Colors.grey),
                     ),
@@ -117,7 +194,7 @@ class ProductDetailScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.name,
+                          widget.item.name,
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -125,7 +202,7 @@ class ProductDetailScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        item.displayPrice,
+                        widget.item.displayPrice,
                         style: const TextStyle(
                           fontSize: 20,
                           color: Colors.green,
@@ -136,7 +213,7 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Category: ${item.category}',
+                    'Category: ${widget.item.category}',
                     style: TextStyle(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 16),
@@ -145,7 +222,7 @@ class ProductDetailScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(item.description, style: const TextStyle(fontSize: 16)),
+                  Text(widget.item.description, style: const TextStyle(fontSize: 16)),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -155,7 +232,7 @@ class ProductDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item.ownerName,
+                            widget.item.ownerName,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const Text(
@@ -174,13 +251,30 @@ class ProductDetailScreen extends StatelessWidget {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          onPressed: () => _contactSeller(context),
-          icon: const Icon(Icons.chat),
-          label: const Text('Chat with Seller'),
+        child: Row(
+          children: [
+            Expanded(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: _isInCart ? null : _addToCart,
+                icon: Icon(_isInCart ? Icons.check : Icons.shopping_cart),
+                label: Text(_isInCart ? 'In Cart' : 'Add to Cart'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () => _contactSeller(context),
+                icon: const Icon(Icons.chat),
+                label: const Text('Chat'),
+              ),
+            ),
+          ],
         ),
       ),
     );
