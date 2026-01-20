@@ -73,7 +73,7 @@ class _RegisterPageState extends State<RegisterPage> {
             TextField(
               controller: _emailCtrl,
               decoration: const InputDecoration(
-                labelText: 'UTHM Email (@student.uthm.edu.my)',
+                labelText: 'UTHM Email (xxxxxxx@student.uthm.edu.my)',
                 border: OutlineInputBorder(),
                 hintText: 'example@student.uthm.edu.my',
               ),

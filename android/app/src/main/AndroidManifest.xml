@@ -5,6 +5,9 @@
         android:label="stubiz_main"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC_qWtj8UbFgpksTKNst9By_pmUf9-P_qI"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

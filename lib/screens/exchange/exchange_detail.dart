@@ -1,13 +1,14 @@
+// lib/screens/exchange/exchange_detail.dart
 import 'package:flutter/material.dart';
 import '../../models/listing_item.dart';
-import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
-import '../../services/marketplace_service.dart'; // Added for reporting
+import '../../services/chat_service.dart';
+import '../../services/marketplace_service.dart';
 import '../chat/chat_room.dart';
 
-class ExchangeDetailScreen extends StatelessWidget {
+class ExchangeDetail extends StatelessWidget {
   final ListingItem item;
-  const ExchangeDetailScreen({super.key, required this.item});
+  const ExchangeDetail({super.key, required this.item});
 
   Future<void> _startChat(BuildContext context) async {
     final user = AuthService.currentUser;
@@ -44,45 +45,87 @@ class ExchangeDetailScreen extends StatelessWidget {
     }
   }
 
-  // Reporting Logic
   void _reportItem(BuildContext context) {
-    final reasonCtrl = TextEditingController();
+    const reasons = <String>[
+      'Scam / Fraud',
+      'Prohibited Item',
+      'Harassment',
+      'Spam',
+      'Other',
+    ];
+
+    String selected = reasons.first;
+    final otherCtrl = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Report Post'),
-        content: TextField(
-          controller: reasonCtrl,
-          decoration: const InputDecoration(hintText: 'Reason'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Report Post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...reasons.map(
+                (r) => RadioListTile<String>(
+                  value: r,
+                  groupValue: selected,
+                  onChanged: (v) => setLocal(() => selected = v!),
+                  title: Text(r),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              if (selected == 'Other') ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: otherCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Write a short reason...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              if (reasonCtrl.text.isNotEmpty) {
-                MarketplaceService.reportItem(
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final reason = selected == 'Other'
+                    ? otherCtrl.text.trim()
+                    : selected.trim();
+
+                if (reason.isEmpty) return;
+
+                await MarketplaceService.reportItem(
                   item.id,
                   item.type.value,
-                  reasonCtrl.text,
+                  reason,
                 );
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Report submitted')),
-                );
-              }
-            },
-            child: const Text('Report'),
-          ),
-        ],
+
+                if (context.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Report submitted')),
+                  );
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final wanted = (item.wantedItem ?? item.wantedItem ?? '').toString();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Details'),
@@ -101,69 +144,82 @@ class ExchangeDetailScreen extends StatelessWidget {
               Image.network(
                 item.imageUrl!,
                 width: double.infinity,
-                height: 300,
+                height: 280,
                 fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  height: 280,
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.broken_image, size: 48),
+                ),
               ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.name,
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.swap_calls, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Looking for: ${item.wantedItem}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                  const SizedBox(height: 10),
+                  if (wanted.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.swap_calls),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Wanted: $wanted',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'Description',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(item.description, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(height: 24),
+                  Text(item.description),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       const CircleAvatar(child: Icon(Icons.person)),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.ownerName,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'Owner',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.ownerName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item.category,
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        item.timeAgo,
+                        style: TextStyle(color: Colors.grey.shade600),
                       ),
                     ],
                   ),
@@ -174,14 +230,11 @@ class ExchangeDetailScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ElevatedButton.icon(
           onPressed: () => _startChat(context),
           icon: const Icon(Icons.chat),
           label: const Text('Chat to Swap'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
         ),
       ),
     );

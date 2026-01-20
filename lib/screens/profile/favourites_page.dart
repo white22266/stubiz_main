@@ -128,7 +128,7 @@ class FavoritesPage extends StatelessWidget {
     if (item.type == ListingType.exchange) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ExchangeDetailScreen(item: item)),
+        MaterialPageRoute(builder: (_) => ExchangeDetail(item: item)),
       );
       return;
     }

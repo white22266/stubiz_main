@@ -94,7 +94,7 @@ class ChatService {
         'names': {myUid: myName, otherUserId: otherName},
         'lastMessage': '',
         'lastMessageType': 'text',
-        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastMessageAt': FieldValue.serverTimestamp(),
         'lastSenderId': '',
       });
     } else {
@@ -116,7 +116,7 @@ class ChatService {
     return _db
         .collection('chats')
         .where('participants', arrayContains: myUid)
-        .orderBy('lastMessageTime', descending: true)
+        .orderBy('lastMessageAt', descending: true)
         .snapshots();
   }
 
@@ -155,7 +155,7 @@ class ChatService {
       tx.update(chatRef, {
         'lastMessage': text,
         'lastMessageType': 'text',
-        'lastMessageTime': now,
+        'lastMessageAt': now,
         'lastSenderId': myUid,
         // Ensure my name in chat doc is not "Me"/empty
         'names.$myUid': senderName,
@@ -192,7 +192,7 @@ class ChatService {
       tx.update(chatRef, {
         'lastMessage': '[Image]',
         'lastMessageType': 'image',
-        'lastMessageTime': now,
+        'lastMessageAt': now,
         'lastSenderId': myUid,
         // Ensure my name in chat doc is not "Me"/empty
         'names.$myUid': senderName,

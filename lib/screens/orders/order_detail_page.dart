@@ -48,7 +48,11 @@ class OrderDetailPage extends StatelessWidget {
   Widget _buildOrderHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
+<<<<<<< HEAD
+      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+=======
       color: Theme.of(context).primaryColor.withOpacity(0.1),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
       child: Column(
         children: [
           Icon(
@@ -68,10 +72,14 @@ class OrderDetailPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Order #${order.id.substring(0, 12).toUpperCase()}',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+=======
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey[700],
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
         ],
       ),
@@ -86,10 +94,14 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Order Information',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 16),
           _buildInfoRow(
@@ -113,11 +125,15 @@ class OrderDetailPage extends StatelessWidget {
           ],
           if (order.paymentId != null) ...[
             const SizedBox(height: 12),
+<<<<<<< HEAD
+            _buildInfoRow(Icons.receipt, 'Payment ID', order.paymentId!),
+=======
             _buildInfoRow(
               Icons.receipt,
               'Payment ID',
               order.paymentId!,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ],
         ],
       ),
@@ -136,10 +152,14 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               Text(
                 label,
+<<<<<<< HEAD
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+=======
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
                 ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
               ),
               const SizedBox(height: 2),
               Text(
@@ -164,10 +184,14 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Order Items',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 16),
           ...order.items.map((item) => _buildOrderItem(item)),
@@ -218,10 +242,14 @@ class OrderDetailPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Seller: ${item.sellerName}',
+<<<<<<< HEAD
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+=======
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
                     ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -260,10 +288,14 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Price Summary',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 16),
           _buildPriceRow('Subtotal', order.subtotal),
@@ -308,10 +340,14 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Shipping Information',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 16),
           _buildInfoRow(
@@ -338,10 +374,14 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Order Notes',
+<<<<<<< HEAD
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+=======
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
           const SizedBox(height: 12),
           Container(
@@ -351,10 +391,14 @@ class OrderDetailPage extends StatelessWidget {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
+<<<<<<< HEAD
+            child: Text(order.notes!, style: const TextStyle(fontSize: 14)),
+=======
             child: Text(
               order.notes!,
               style: const TextStyle(fontSize: 14),
             ),
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
           ),
         ],
       ),
@@ -423,9 +467,15 @@ class OrderDetailPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
+<<<<<<< HEAD
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to cancel order: $e')));
+=======
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to cancel order: $e')),
         );
+>>>>>>> cbb99fc649908aa4a11bd6ae7debeb10193a0d20
       }
     }
   }
