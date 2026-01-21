@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../models/listing_item.dart'; // Need ListingType extension
+import '../../models/listing_item.dart';
 import '../../services/marketplace_service.dart';
 import '../../widgets/empty_state.dart';
+import 'report_detail_page.dart';
 
 class AdminReportsPage extends StatelessWidget {
   const AdminReportsPage({super.key});
@@ -12,7 +13,6 @@ class AdminReportsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Reported Items')),
       body: StreamBuilder<QuerySnapshot>(
-        // Directly accessing 'reports' collection as defined in MarketplaceService.reportItem
         stream: FirebaseFirestore.instance
             .collection('reports')
             .orderBy('createdAt', descending: true)
@@ -41,7 +41,7 @@ class AdminReportsPage extends StatelessWidget {
               final itemTypeStr = data['itemType'] ?? 'product';
               final reason = data['reason'] ?? 'No reason';
 
-              // Helper to get ListingType from string string
+              // Helper to get ListingType from string
               ListingType type;
               if (itemTypeStr == 'exchange') {
                 type = ListingType.exchange;
@@ -50,6 +50,7 @@ class AdminReportsPage extends StatelessWidget {
               } else {
                 type = ListingType.product;
               }
+
               return Card(
                 color: Colors.red[50],
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -61,6 +62,25 @@ class AdminReportsPage extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // View Details Button
+                      IconButton(
+                        tooltip: 'View Details',
+                        icon: const Icon(
+                          Icons.visibility,
+                          color: Colors.blue,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ReportDetailPage(
+                                reportId: reportId,
+                                reportData: data,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                       // Dismiss Report Button
                       IconButton(
                         tooltip: 'Dismiss Report',
@@ -70,7 +90,7 @@ class AdminReportsPage extends StatelessWidget {
                         ),
                         onPressed: () => _dismissReport(reportId),
                       ),
-                      // Delete Item Button (Nuclear Option)
+                      // Delete Item Button
                       IconButton(
                         tooltip: 'Delete Item',
                         icon: const Icon(

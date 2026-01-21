@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'screens/admin/admin_dashboard_page.dart';
 import 'screens/admin/admin_users_page.dart';
 import 'screens/admin/admin_listings_page.dart';
-import 'screens/admin/admin_reports_page.dart'; // New reports page
-import 'screens/profile/profile_page.dart'; // Reuse profile for logout
+import 'screens/admin/admin_reports_page.dart';
+import 'screens/admin/profile/admin_profile_page.dart';
 
 class AdminNavigation extends StatefulWidget {
   const AdminNavigation({super.key});
@@ -20,7 +20,7 @@ class _AdminNavigationState extends State<AdminNavigation> {
     const AdminUsersPage(),
     const AdminListingsPage(),
     const AdminReportsPage(),
-    const ProfilePage(), // Uses generic profile for Logout
+    const AdminProfilePage(),
   ];
 
   @override

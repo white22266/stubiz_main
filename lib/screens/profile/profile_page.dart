@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
-import 'my_listings_page.dart'; // We will create this generic page below
+import 'my_listings_page.dart';
 import '../../models/listing_item.dart';
 import '../orders/order_history_page.dart';
 import '../orders/seller_orders_page.dart';
+import 'edit_profile_page.dart';
+import '../warnings/warnings_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -36,6 +38,15 @@ class ProfilePage extends StatelessWidget {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(user?.email ?? '', style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Edit Profile'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EditProfilePage()),
+              ),
+            ),
             const SizedBox(height: 30),
 
             // Menu Section
@@ -94,6 +105,18 @@ class ProfilePage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => const SellerOrdersPage(),
+                ),
+              ),
+            ),
+            _buildMenuTile(
+              context,
+              icon: Icons.warning,
+              title: 'My Warnings',
+              color: Colors.orange,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const WarningsPage(),
                 ),
               ),
             ),
