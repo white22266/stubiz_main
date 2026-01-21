@@ -215,7 +215,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ...reasons.map(
                 (r) => RadioListTile<String>(
                   value: r,
+                  //ignore: deprecated_member_use
                   groupValue: selected,
+                  //ignore: deprecated_member_use
                   onChanged: (v) => setLocal(() => selected = v!),
                   title: Text(r),
                   dense: true,
