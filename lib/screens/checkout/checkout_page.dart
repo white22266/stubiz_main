@@ -245,16 +245,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildPaymentMethodTile(PaymentMethod method) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: RadioListTile<String>(
-        value: method.id,
-        groupValue: _selectedPaymentMethod,
-        onChanged: method.isEnabled
-            ? (value) {
-                setState(() {
-                  _selectedPaymentMethod = value!;
-                });
-              }
-            : null,
+      child: ListTile(
+        // ignore: deprecated_member_use
+        leading: Radio<String>(
+          value: method.id,
+          // ignore: deprecated_member_use
+          groupValue: _selectedPaymentMethod,
+          // ignore: deprecated_member_use
+          onChanged: method.isEnabled
+              ? (value) {
+                  setState(() {
+                    _selectedPaymentMethod = value!;
+                  });
+                }
+              : null,
+        ),
         title: Text(
           method.name,
           style: TextStyle(
@@ -269,10 +274,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
             color: method.isEnabled ? Colors.grey[600] : Colors.grey[400],
           ),
         ),
-        secondary: Icon(
+        trailing: Icon(
           _getPaymentIcon(method.icon),
           color: method.isEnabled ? Colors.blue : Colors.grey,
         ),
+        onTap: method.isEnabled
+            ? () {
+                setState(() {
+                  _selectedPaymentMethod = method.id;
+                });
+              }
+            : null,
       ),
     );
   }
