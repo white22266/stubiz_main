@@ -267,10 +267,7 @@ class MarketplaceService {
       }
     }
 
-    final updateData = {
-      ...data,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
+    final updateData = {...data, 'updatedAt': FieldValue.serverTimestamp()};
 
     if (imageUrl != null) {
       updateData['imageUrl'] = imageUrl;
@@ -315,13 +312,19 @@ class MarketplaceService {
     final products = await _db.collection('products').count().get();
     final exchanges = await _db.collection('exchange_posts').count().get();
     final promotions = await _db.collection('promotions').count().get();
-    final users = await _db.collection('users').count().get();
+
+    // Only count users with role 'student', exclude admins
+    final students = await _db
+        .collection('users')
+        .where('role', isEqualTo: 'student')
+        .count()
+        .get();
 
     return {
       'products': products.count ?? 0,
       'exchanges': exchanges.count ?? 0,
       'promotions': promotions.count ?? 0,
-      'users': users.count ?? 0,
+      'users': students.count ?? 0,
     };
   }
 

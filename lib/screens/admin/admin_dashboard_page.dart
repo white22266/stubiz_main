@@ -14,13 +14,27 @@ class AdminDashboardPage extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           }
 
           final stats =
               snapshot.data ??
-              {'products': 0, 'exchanges': 0, 'promotions': 0, 'users': 0};
+              const {
+                'products': 0,
+                'exchanges': 0,
+                'promotions': 0,
+                'users': 0,
+              };
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -30,24 +44,24 @@ class AdminDashboardPage extends StatelessWidget {
               mainAxisSpacing: 16,
               children: [
                 _buildStatCard(
-                  'Total Users',
-                  stats['users'].toString(),
-                  Colors.blue,
+                  title: 'Total Students',
+                  value: (stats['users'] ?? 0).toString(),
+                  color: Colors.blue,
                 ),
                 _buildStatCard(
-                  'Products',
-                  stats['products'].toString(),
-                  Colors.green,
+                  title: 'Products',
+                  value: (stats['products'] ?? 0).toString(),
+                  color: Colors.green,
                 ),
                 _buildStatCard(
-                  'Exchanges',
-                  stats['exchanges'].toString(),
-                  Colors.orange,
+                  title: 'Exchanges',
+                  value: (stats['exchanges'] ?? 0).toString(),
+                  color: Colors.orange,
                 ),
                 _buildStatCard(
-                  'Promotions',
-                  stats['promotions'].toString(),
-                  Colors.purple,
+                  title: 'Promotions',
+                  value: (stats['promotions'] ?? 0).toString(),
+                  color: Colors.purple,
                 ),
               ],
             ),
@@ -57,23 +71,33 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, Color color) {
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required Color color,
+  }) {
     return Card(
       color: color.withValues(alpha: 0.1),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: color,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(title, style: TextStyle(fontSize: 16, color: color)),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(fontSize: 16, color: color),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

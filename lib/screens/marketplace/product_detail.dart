@@ -36,9 +36,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Future<void> _addToCart() async {
     final currentUser = AuthService.currentUser;
     if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login first')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please login first')));
       return;
     }
 
@@ -80,9 +80,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -104,7 +104,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     // Start Chat
     try {
-      final chatId = await ChatService.startChat(widget.item.ownerId, widget.item.ownerName);
+      final chatId = await ChatService.startChat(
+        widget.item.ownerId,
+        widget.item.ownerName,
+      );
       if (!context.mounted) return;
       Navigator.push(
         context,
@@ -141,7 +144,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     // Extract context references before async gap
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -156,9 +159,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -166,12 +167,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
 
     if (confirm == true && mounted) {
-      
       try {
-        await MarketplaceService.deleteItem(
-          widget.item.id,
-          widget.item.type,
-        );
+        await MarketplaceService.deleteItem(widget.item.id, widget.item.type);
 
         if (mounted) {
           scaffoldMessenger.showSnackBar(
@@ -196,38 +193,79 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _reportItem(BuildContext context) {
+    const reasons = <String>[
+      'Scam / Fraud',
+      'Prohibited Item',
+      'Harassment',
+      'Spam',
+      'Other',
+    ];
+
+    String selected = reasons.first;
+    final otherCtrl = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (ctx) {
-        final reasonCtrl = TextEditingController();
-        return AlertDialog(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
           title: const Text('Report Item'),
-          content: TextField(
-            controller: reasonCtrl,
-            decoration: const InputDecoration(hintText: 'Reason for reporting'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ...reasons.map(
+                (r) => RadioListTile<String>(
+                  value: r,
+                  groupValue: selected,
+                  onChanged: (v) => setLocal(() => selected = v!),
+                  title: Text(r),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              if (selected == 'Other') ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: otherCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Write a short reason...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel'),
             ),
-            TextButton(
-              onPressed: () {
-                MarketplaceService.reportItem(
+            ElevatedButton(
+              onPressed: () async {
+                final reason = selected == 'Other'
+                    ? otherCtrl.text.trim()
+                    : selected.trim();
+
+                if (reason.isEmpty) return;
+
+                await MarketplaceService.reportItem(
                   widget.item.id,
                   widget.item.type.value,
-                  reasonCtrl.text,
+                  reason,
                 );
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Report submitted')),
-                );
+
+                if (context.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Report submitted')),
+                  );
+                }
               },
               child: const Text('Report'),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -309,7 +347,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(widget.item.description, style: const TextStyle(fontSize: 16)),
+                  Text(
+                    widget.item.description,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
