@@ -22,12 +22,8 @@ class MyListingsPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('My ${type.displayName}s'),
-      ), // e.g., My Products
+      appBar: AppBar(title: Text('My ${type.displayName}s')),
       body: StreamBuilder<List<ListingItem>>(
-        // NOTE: You might need to update marketplace_service.dart to accept 'ownerId' parameter in streamListings
-        // Or filter it client side. Assuming updated service from previous conversation handles filters.
         stream: MarketplaceService.streamListings(type).map(
           (items) => items.where((item) => item.ownerId == user.uid).toList(),
         ),
@@ -105,32 +101,26 @@ class MyListingsPage extends StatelessWidget {
         detailPage = ExchangeDetail(item: item);
         break;
       case ListingType.promotion:
-        detailPage = PromotionDetail(item: item);
+        detailPage = PromotionDetailScreen(item: item);
         break;
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => detailPage),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => detailPage));
   }
 
   void _editItem(BuildContext context, ListingItem item) {
     Widget editPage;
     switch (item.type) {
       case ListingType.product:
-        editPage = EditProductScreen(item: item);
+        editPage = EditProductScreen(product: item);
         break;
       case ListingType.exchange:
-        editPage = EditExchange(item: item);
+        editPage = EditExchangeScreen(exchange: item);
         break;
       case ListingType.promotion:
-        editPage = EditPromotion(item: item);
+        editPage = EditPromotionScreen(promotion: item);
         break;
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => editPage),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => editPage));
   }
 
   void _confirmDelete(BuildContext context, ListingItem item) {

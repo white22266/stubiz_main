@@ -58,7 +58,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
     }
   }
 
-  Future<void> _deleteItem() async {
+  Future<void> _deleteItem(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -87,21 +87,20 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                     .doc(widget.warningId)
                     .update({'status': 'resolved'});
 
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.pop(context);
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Item deleted successfully')),
                 );
               } catch (e) {
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             child: const Text('Delete'),
@@ -111,7 +110,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
     );
   }
 
-  Future<void> _editItem() async {
+  Future<void> _editItem(BuildContext context) async {
     // Navigate to edit page based on item type
     if (_item == null) return;
 
@@ -128,12 +127,13 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
         break;
     }
 
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Navigate to $routeName with item: ${_item!.id}')),
     );
   }
 
-  Future<void> _resubmitItem() async {
+  Future<void> _resubmitItem(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -161,21 +161,20 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                     .doc(widget.warningId)
                     .update({'status': 'resolved'});
 
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.pop(context);
-                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Item resubmitted for review')),
                 );
               } catch (e) {
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             child: const Text('Resubmit'),
@@ -211,7 +210,11 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.warning, color: Colors.orange, size: 32),
+                              const Icon(
+                                Icons.warning,
+                                color: Colors.orange,
+                                size: 32,
+                              ),
                               const SizedBox(width: 12),
                               const Text(
                                 'Warning Information',
@@ -223,8 +226,14 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          _buildInfoRow('Item Name', widget.warningData['itemName'] ?? 'Unknown'),
-                          _buildInfoRow('Reason', widget.warningData['reason'] ?? 'No reason'),
+                          _buildInfoRow(
+                            'Item Name',
+                            widget.warningData['itemName'] ?? 'Unknown',
+                          ),
+                          _buildInfoRow(
+                            'Reason',
+                            widget.warningData['reason'] ?? 'No reason',
+                          ),
                           _buildInfoRow('Status', status.toUpperCase()),
                           const SizedBox(height: 12),
                           Container(
@@ -241,7 +250,10 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(widget.warningData['warningMessage'] ?? 'No message'),
+                                Text(
+                                  widget.warningData['warningMessage'] ??
+                                      'No message',
+                                ),
                               ],
                             ),
                           ),
@@ -314,7 +326,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                                 child: ElevatedButton.icon(
                                   icon: const Icon(Icons.edit),
                                   label: const Text('Edit Item'),
-                                  onPressed: _editItem,
+                                  onPressed: () => _editItem(context),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -326,7 +338,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
                                   ),
-                                  onPressed: _resubmitItem,
+                                  onPressed: () => _resubmitItem(context),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -338,7 +350,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
                                   ),
-                                  onPressed: _deleteItem,
+                                  onPressed: () => _deleteItem(context),
                                 ),
                               ),
                             ],
@@ -371,9 +383,7 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

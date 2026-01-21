@@ -67,8 +67,10 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
   }
 
   Future<void> _sendWarning() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     if (_warningController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Please enter a warning message')),
       );
       return;
@@ -87,19 +89,19 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         const SnackBar(content: Text('Warning sent successfully')),
       );
       _warningController.clear();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(content: Text('Error sending warning: $e')),
       );
     }
   }
 
-  Future<void> _suspendItem() async {
+  Future<void> _suspendItem(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -129,23 +131,26 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                   'itemType': widget.reportData['itemType'],
                   'itemName': _item!.name,
                   'reason': widget.reportData['reason'],
-                  'warningMessage': 'Your item has been suspended due to violations.',
+                  'warningMessage':
+                      'Your item has been suspended due to violations.',
                   'status': 'pending',
                   'createdAt': FieldValue.serverTimestamp(),
                 });
 
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
+                if (!context.mounted) return;
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Item suspended successfully')),
                 );
               } catch (e) {
-                if (!mounted) return;
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             child: const Text('Suspend'),
@@ -155,7 +160,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
     );
   }
 
-  Future<void> _deleteItem() async {
+  Future<void> _deleteItem(BuildContext context) async {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -173,8 +178,9 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             onPressed: () async {
               await MarketplaceService.deleteItem(_item!.id, _item!.type);
               await _dismissReport();
-              if (!mounted) return;
+              if (!ctx.mounted) return;
               Navigator.pop(ctx);
+              if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Item deleted successfully')),
@@ -197,9 +203,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Report Details'),
-      ),
+      appBar: AppBar(title: const Text('Report Details')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -229,9 +233,18 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _buildInfoRow('Reason', widget.reportData['reason'] ?? 'No reason'),
-                          _buildInfoRow('Type', widget.reportData['itemType'] ?? 'Unknown'),
-                          _buildInfoRow('Item ID', widget.reportData['itemId'] ?? 'Unknown'),
+                          _buildInfoRow(
+                            'Reason',
+                            widget.reportData['reason'] ?? 'No reason',
+                          ),
+                          _buildInfoRow(
+                            'Type',
+                            widget.reportData['itemType'] ?? 'Unknown',
+                          ),
+                          _buildInfoRow(
+                            'Item ID',
+                            widget.reportData['itemId'] ?? 'Unknown',
+                          ),
                         ],
                       ),
                     ),
@@ -342,10 +355,12 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                                 ),
                                 onPressed: () async {
                                   await _dismissReport();
-                                  if (!mounted) return;
+                                  if (!context.mounted) return;
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Report dismissed')),
+                                    const SnackBar(
+                                      content: Text('Report dismissed'),
+                                    ),
                                   );
                                 },
                               ),
@@ -359,7 +374,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.orange,
                                 ),
-                                onPressed: _suspendItem,
+                                onPressed: () => _suspendItem(context),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -371,7 +386,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red,
                                 ),
-                                onPressed: _deleteItem,
+                                onPressed: () => _deleteItem(context),
                               ),
                             ),
                           ],
@@ -404,9 +419,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );
