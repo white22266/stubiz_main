@@ -17,8 +17,14 @@ class _ExchangeHomeState extends State<ExchangeHome> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // Old-mode: 3 tags only (match your ExchangeForm categories)
-  final List<String> _tags = const ['Electronics', 'Books', 'Others'];
+  // Updated: 6 categories as required
+  final List<String> _tags = const [
+    'Electronics',
+    'Books',
+    'Clothing',
+    'Furniture',
+    'Others'
+  ];
 
   @override
   void dispose() {
@@ -72,7 +78,7 @@ class _ExchangeHomeState extends State<ExchangeHome> {
     final q = query.toLowerCase().trim();
     if (q.isEmpty) return true;
 
-    final title = item.name.toLowerCase(); // exchange title -> item.name
+    final title = item.name.toLowerCase();
     final desc = item.description.toLowerCase();
     final wanted = (item.wantedItem ?? '').toLowerCase();
 
@@ -93,12 +99,12 @@ class _ExchangeHomeState extends State<ExchangeHome> {
       ),
       body: Column(
         children: [
-          // 3-tag chips (old mode)
+          // Category filter chips with All option
           SizedBox(
             height: 52,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               children: [
                 FilterChip(
                   label: const Text('All'),
@@ -125,12 +131,16 @@ class _ExchangeHomeState extends State<ExchangeHome> {
           if (_searchQuery.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.blue.shade50,
               child: Row(
                 children: [
+                  const Icon(Icons.search, size: 20, color: Colors.blue),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Searching: "$_searchQuery"',
                       overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ),
                   IconButton(
@@ -143,10 +153,9 @@ class _ExchangeHomeState extends State<ExchangeHome> {
 
           Expanded(
             child: StreamBuilder<List<ListingItem>>(
-              // IMPORTANT: your service uses streamListings, not streamExchanges
               stream: MarketplaceService.streamListings(
                 ListingType.exchange,
-                category: _selectedTag, // null = no filter
+                category: _selectedTag,
               ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -158,7 +167,7 @@ class _ExchangeHomeState extends State<ExchangeHome> {
 
                 var items = snapshot.data ?? [];
 
-                // Local search filter (old mode)
+                // Local search filter
                 if (_searchQuery.isNotEmpty) {
                   items = items
                       .where((it) => _matchesSearch(it, _searchQuery))
@@ -166,12 +175,16 @@ class _ExchangeHomeState extends State<ExchangeHome> {
                 }
 
                 if (items.isEmpty) {
-                  return const Center(child: Text('No exchange posts found.'));
+                  return const Center(
+                    child: Text(
+                      'No exchange posts found.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
                 }
 
                 return RefreshIndicator(
                   onRefresh: () async {
-                    // Firestore stream auto-updates; this just triggers rebuild.
                     setState(() {});
                   },
                   child: ListView.builder(
@@ -204,9 +217,9 @@ class _ExchangeHomeState extends State<ExchangeHome> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
       child: InkWell(
         onTap: () {
-          // IMPORTANT: your detail page class is ExchangeDetailScreen
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => ExchangeDetail(item: item)),
@@ -238,7 +251,7 @@ class _ExchangeHomeState extends State<ExchangeHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name, // exchange title
+                      item.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -252,6 +265,10 @@ class _ExchangeHomeState extends State<ExchangeHome> {
                         'Wanted: $wanted',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                        ),
                       ),
                     const SizedBox(height: 6),
                     Row(
@@ -268,7 +285,10 @@ class _ExchangeHomeState extends State<ExchangeHome> {
                             ),
                             child: Text(
                               item.category,
-                              style: const TextStyle(fontSize: 12),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue.shade700,
+                              ),
                             ),
                           ),
                         const Spacer(),
