@@ -74,9 +74,7 @@ class ExchangeDetail extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -85,10 +83,7 @@ class ExchangeDetail extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
-        await MarketplaceService.deleteItem(
-          item.id,
-          item.type,
-        );
+        await MarketplaceService.deleteItem(item.id, item.type);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +130,9 @@ class ExchangeDetail extends StatelessWidget {
               ...reasons.map(
                 (r) => RadioListTile<String>(
                   value: r,
+                  // ignore: deprecated_member_use
                   groupValue: selected,
+                  // ignore: deprecated_member_use
                   onChanged: (v) => setLocal(() => selected = v!),
                   title: Text(r),
                   dense: true,

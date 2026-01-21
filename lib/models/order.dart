@@ -1,12 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'cart_item.dart';
 
-enum OrderStatus {
-  pending,
-  processing,
-  completed,
-  cancelled,
-}
+enum OrderStatus { pending, processing, completed, cancelled }
 
 extension OrderStatusExtension on OrderStatus {
   String get value {
@@ -172,7 +167,8 @@ class Order {
       userId: data['userId'] ?? '',
       userName: data['userName'] ?? '',
       userEmail: data['userEmail'] ?? '',
-      items: (data['items'] as List<dynamic>?)
+      items:
+          (data['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromMap(item as Map<String, dynamic>))
               .toList() ??
           [],
@@ -205,6 +201,7 @@ class Order {
   }
 
   int get totalItems {
+    // ignore: avoid_types_as_parameter_names
     return items.fold(0, (sum, item) => sum + item.quantity);
   }
 
