@@ -166,6 +166,123 @@ class MarketplaceService {
     await _db.collection(type.collectionName).add(finalData);
   }
 
+  // -------------------- UPDATE OPERATIONS --------------------
+
+  static Future<void> updateProduct({
+    required String productId,
+    required String name,
+    required double price,
+    required String description,
+    required String category,
+    File? imageFile,
+  }) async {
+    await _updateListing(
+      type: ListingType.product,
+      id: productId,
+      data: {
+        'name': name,
+        'price': price,
+        'description': description,
+        'category': category,
+      },
+      imageFile: imageFile,
+    );
+  }
+
+  static Future<void> updateExchange({
+    required String exchangeId,
+    required String title,
+    required String wantedItem,
+    required String description,
+    required String category,
+    File? imageFile,
+  }) async {
+    await _updateListing(
+      type: ListingType.exchange,
+      id: exchangeId,
+      data: {
+        'title': title,
+        'wantedItem': wantedItem,
+        'description': description,
+        'category': category,
+      },
+      imageFile: imageFile,
+    );
+  }
+
+  static Future<void> updatePromotion({
+    required String promotionId,
+    required String businessName,
+    required String description,
+    required String category,
+    String? website,
+    String? locationText,
+    GeoPoint? geo,
+    File? imageFile,
+  }) async {
+    await _updateListing(
+      type: ListingType.promotion,
+      id: promotionId,
+      data: {
+        'businessName': businessName,
+        'description': description,
+        'category': category,
+        'website': website,
+        'locationText': locationText,
+        'geo': geo,
+      },
+      imageFile: imageFile,
+    );
+  }
+
+  static Future<void> _updateListing({
+    required ListingType type,
+    required String id,
+    required Map<String, dynamic> data,
+    File? imageFile,
+  }) async {
+    final user = AuthService.currentUser;
+    if (user == null) throw Exception('Not authenticated');
+
+    // Upload new image if provided
+    String? imageUrl;
+    String? imagePath;
+
+    if (imageFile != null) {
+      final ext = imageFile.path.split('.').last;
+      imagePath = '${type.collectionName}/$id.$ext';
+      final ref = _storage.ref().child(imagePath);
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+
+      // Delete old image if exists
+      try {
+        final doc = await _db.collection(type.collectionName).doc(id).get();
+        final oldImagePath = doc.data()?['imagePath'] as String?;
+        if (oldImagePath != null && oldImagePath != imagePath) {
+          await _storage.ref().child(oldImagePath).delete();
+        }
+      } catch (_) {
+        // Ignore if old image doesn't exist
+      }
+    }
+
+    final updateData = {
+      ...data,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (imageUrl != null) {
+      updateData['imageUrl'] = imageUrl;
+      updateData['imagePath'] = imagePath;
+    }
+
+    // Remove null values
+    updateData.removeWhere((k, v) => v == null);
+
+    await _db.collection(type.collectionName).doc(id).update(updateData);
+  }
+
   // -------------------- ADMIN OPERATIONS --------------------
 
   static Future<void> approvePromotion(String id, bool isApproved) async {

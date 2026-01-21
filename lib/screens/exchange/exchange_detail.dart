@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/marketplace_service.dart';
 import '../chat/chat_room.dart';
+import 'edit_exchange.dart';
 
 class ExchangeDetail extends StatelessWidget {
   final ListingItem item;
@@ -42,6 +43,72 @@ class ExchangeDetail extends StatelessWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _editExchange(BuildContext context) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditExchangeScreen(exchange: item),
+      ),
+    );
+
+    if (result == true && context.mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _deleteExchange(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Exchange'),
+        content: const Text(
+          'Are you sure you want to delete this exchange post? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      try {
+        await MarketplaceService.deleteItem(
+          item.id,
+          item.type,
+        );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Exchange deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting exchange: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -130,10 +197,23 @@ class ExchangeDetail extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Details'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.flag),
-            onPressed: () => _reportItem(context),
-          ),
+          if (AuthService.currentUser?.uid == item.ownerId) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _editExchange(context),
+              tooltip: 'Edit Exchange',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deleteExchange(context),
+              tooltip: 'Delete Exchange',
+            ),
+          ] else
+            IconButton(
+              icon: const Icon(Icons.flag),
+              onPressed: () => _reportItem(context),
+              tooltip: 'Report',
+            ),
         ],
       ),
       body: SingleChildScrollView(

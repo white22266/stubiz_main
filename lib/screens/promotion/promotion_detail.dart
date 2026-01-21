@@ -8,7 +8,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/listing_item.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/marketplace_service.dart';
 import '../chat/chat_room.dart';
+import 'edit_promotion.dart';
 
 class PromotionDetailScreen extends StatefulWidget {
   final ListingItem item;
@@ -146,6 +148,72 @@ class _PromotionDetailScreenState extends State<PromotionDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open navigation.')),
         );
+      }
+    }
+  }
+
+  Future<void> _editPromotion(BuildContext context) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPromotionScreen(promotion: widget.item),
+      ),
+    );
+
+    if (result == true && mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _deletePromotion(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Promotion'),
+        content: const Text(
+          'Are you sure you want to delete this promotion? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await MarketplaceService.deleteItem(
+          widget.item.id,
+          widget.item.type,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Promotion deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting promotion: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -303,7 +371,23 @@ class _PromotionDetailScreenState extends State<PromotionDetailScreen> {
     final item = widget.item;
 
     return Scaffold(
-      appBar: AppBar(title: Text(item.name)),
+      appBar: AppBar(
+        title: Text(item.name),
+        actions: [
+          if (AuthService.currentUser?.uid == item.ownerId) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _editPromotion(context),
+              tooltip: 'Edit Promotion',
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deletePromotion(context),
+              tooltip: 'Delete Promotion',
+            ),
+          ],
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

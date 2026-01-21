@@ -149,9 +149,10 @@ class OrderService {
 
   // Get orders by seller (for sellers to see their sales)
   static Stream<List<order_model.Order>> getSellerOrders(String sellerId) {
+    // Note: Firestore doesn't support arrayContains with objects
+    // So we fetch all orders and filter in memory
     return _firestore
         .collection(_ordersCollection)
-        .where('items', arrayContains: {'sellerId': sellerId})
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {

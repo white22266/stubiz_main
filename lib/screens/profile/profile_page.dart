@@ -4,6 +4,7 @@ import '../auth/login_page.dart';
 import 'my_listings_page.dart'; // We will create this generic page below
 import '../../models/listing_item.dart';
 import '../orders/order_history_page.dart';
+import '../orders/seller_orders_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -82,6 +83,17 @@ class ProfilePage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => const OrderHistoryPage(),
+                ),
+              ),
+            ),
+            _buildMenuTile(
+              context,
+              icon: Icons.storefront,
+              title: 'My Sales',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SellerOrdersPage(),
                 ),
               ),
             ),

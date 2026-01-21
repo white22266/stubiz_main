@@ -2,50 +2,53 @@ import 'package:flutter/material.dart';
 import '../../models/order.dart';
 import '../../services/order_service.dart';
 
-class OrderDetailPage extends StatelessWidget {
+class SellerOrderDetailPage extends StatelessWidget {
   final Order order;
+  final List<OrderItem> sellerItems;
 
-  const OrderDetailPage({super.key, required this.order});
+  const SellerOrderDetailPage({
+    super.key,
+    required this.order,
+    required this.sellerItems,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final totalAmount = sellerItems.fold(
+      0.0,
+      (sum, item) => sum + item.totalPrice,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order Details'),
-        actions: [
-          if (order.status == OrderStatus.pending)
-            IconButton(
-              icon: const Icon(Icons.cancel_outlined),
-              onPressed: () => _showCancelDialog(context),
-              tooltip: 'Cancel Order',
-            ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildOrderHeader(context),
+            _buildStatusHeader(context),
             const Divider(height: 1),
-            _buildOrderInfo(context),
+            _buildBuyerInfo(context),
             const Divider(height: 1, thickness: 8),
             _buildItemsList(context),
             const Divider(height: 1, thickness: 8),
-            _buildPriceSummary(context),
+            _buildEarnings(context, totalAmount),
             const Divider(height: 1, thickness: 8),
             _buildShippingInfo(context),
             if (order.notes != null && order.notes!.isNotEmpty) ...[
               const Divider(height: 1, thickness: 8),
               _buildNotes(context),
             ],
-            const SizedBox(height: 80),
+            const SizedBox(height: 24),
           ],
         ),
       ),
+      bottomNavigationBar: _buildActionButtons(context),
     );
   }
 
-  Widget _buildOrderHeader(BuildContext context) {
+  Widget _buildStatusHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       color: _getStatusColor(order.status).withOpacity(0.1),
@@ -68,33 +71,43 @@ class OrderDetailPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Order #${order.id.substring(0, 12).toUpperCase()}',
-            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${order.formattedDate} at ${order.formattedTime}',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOrderInfo(BuildContext context) {
+  Widget _buildBuyerInfo(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Order Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'Buyer Information',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.calendar_today, 'Date', order.formattedDate ?? 'N/A'),
+          _buildInfoRow(Icons.person, 'Name', order.userName),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.access_time, 'Time', order.formattedTime ?? 'N/A'),
+          _buildInfoRow(Icons.email, 'Email', order.userEmail),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.payment, 'Payment Method', order.paymentMethod ?? 'PayPal'),
-          if (order.paymentId != null) ...[
-            const SizedBox(height: 12),
-            _buildInfoRow(Icons.receipt, 'Transaction ID', order.paymentId!),
-          ],
+          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber),
         ],
       ),
     );
@@ -112,12 +125,18 @@ class OrderDetailPage extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -133,11 +152,14 @@ class OrderDetailPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Items',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'Your Items in this Order',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
-          ...order.items.map((item) => _buildOrderItem(item)),
+          ...sellerItems.map((item) => _buildOrderItem(item)),
         ],
       ),
     );
@@ -188,7 +210,10 @@ class OrderDetailPage extends StatelessWidget {
                     children: [
                       Text(
                         'RM ${item.price.toStringAsFixed(2)} x ${item.quantity}',
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
                       ),
                       Text(
                         'RM ${item.totalPrice.toStringAsFixed(2)}',
@@ -208,47 +233,48 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceSummary(BuildContext context) {
-    return Padding(
+  Widget _buildEarnings(BuildContext context, double totalAmount) {
+    return Container(
       padding: const EdgeInsets.all(20),
+      color: Colors.green[50],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Price Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            'Your Earnings',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildPriceRow('Subtotal', order.subtotal),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total from your items:',
+                style: TextStyle(fontSize: 14),
+              ),
+              Text(
+                'RM ${totalAmount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
-          _buildPriceRow('Tax (6%)', order.tax),
-          const Divider(height: 24),
-          _buildPriceRow('Total', order.total, isTotal: true),
+          Text(
+            '${sellerItems.length} item(s) × ${sellerItems.fold(0, (sum, item) => sum + item.quantity)} qty',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPriceRow(String label, double amount, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        Text(
-          'RM ${amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: isTotal ? 18 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isTotal ? Colors.green[700] : null,
-          ),
-        ),
-      ],
     );
   }
 
@@ -260,12 +286,23 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Shipping Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.location_on, 'Address', order.shippingAddress),
+          _buildInfoRow(
+            Icons.location_on,
+            'Delivery Address',
+            order.shippingAddress,
+          ),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber),
+          _buildInfoRow(
+            Icons.phone,
+            'Contact Number',
+            order.phoneNumber ?? 'N/A',
+          ),
         ],
       ),
     );
@@ -279,7 +316,10 @@ class OrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Order Notes',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Container(
@@ -299,25 +339,77 @@ class OrderDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _showCancelDialog(BuildContext context) async {
+  Widget? _buildActionButtons(BuildContext context) {
+    if (order.status == OrderStatus.cancelled ||
+        order.status == OrderStatus.completed) {
+      return null;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (order.status == OrderStatus.pending)
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton.icon(
+                  onPressed: () => _markAsProcessing(context),
+                  icon: const Icon(Icons.local_shipping),
+                  label: const Text('Mark as Processing'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                ),
+              ),
+            if (order.status == OrderStatus.processing) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: FilledButton.icon(
+                  onPressed: () => _markAsCompleted(context),
+                  icon: const Icon(Icons.check_circle),
+                  label: const Text('Mark as Completed'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markAsProcessing(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Order'),
+        title: const Text('Process Order'),
         content: const Text(
-          'Are you sure you want to cancel this order? This action cannot be undone.',
+          'Mark this order as processing? The buyer will be notified that you are preparing their items.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Yes, Cancel'),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -325,11 +417,68 @@ class OrderDetailPage extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
-        await OrderService.cancelOrder(order.id);
+        await OrderService.updateOrderStatus(
+          order.id,
+          OrderStatus.processing,
+        );
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Order cancelled successfully'),
+              content: Text('Order marked as processing'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _markAsCompleted(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Complete Order'),
+        content: const Text(
+          'Mark this order as completed? This action confirms that the items have been delivered to the buyer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text('Complete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      try {
+        await OrderService.updateOrderStatus(
+          order.id,
+          OrderStatus.completed,
+        );
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Order completed successfully!'),
               backgroundColor: Colors.green,
             ),
           );
