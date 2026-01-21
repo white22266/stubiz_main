@@ -124,8 +124,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _editProduct(BuildContext context) async {
-    final result = await Navigator.push<bool>(
-      context,
+    final navigator = Navigator.of(context);
+    final result = await navigator.push<bool>(
       MaterialPageRoute(
         builder: (context) => EditProductScreen(product: widget.item),
       ),
@@ -133,11 +133,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     if (result == true && mounted) {
       // Refresh the page by popping and showing updated data
-      Navigator.pop(context);
+      navigator.pop();
     }
   }
 
   Future<void> _deleteProduct(BuildContext context) async {
+    // Extract context references before async gap
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -162,6 +166,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
 
     if (confirm == true && mounted) {
+      
       try {
         await MarketplaceService.deleteItem(
           widget.item.id,
@@ -169,17 +174,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text('Product deleted successfully'),
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          navigator.pop();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(
               content: Text('Error deleting product: $e'),
               backgroundColor: Colors.red,
