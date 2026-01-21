@@ -88,4 +88,70 @@ class AuthService {
     final doc = await _db.collection('users').doc(user.uid).get();
     return doc.data()?['role'] ?? 'student';
   }
+
+  // Change Password
+  static Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw FirebaseAuthException(
+        code: 'no-user',
+        message: 'No user is currently signed in.',
+      );
+    }
+
+    // Re-authenticate user with current password
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: currentPassword,
+    );
+
+    try {
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        throw FirebaseAuthException(
+          code: 'wrong-password',
+          message: 'Current password is incorrect.',
+        );
+      }
+      rethrow;
+    }
+  }
+
+  // Reset Password (Forgot Password)
+  static Future<void> resetPassword(String email) async {
+    final emailTrimmed = email.trim().toLowerCase();
+
+    if (emailTrimmed.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'empty-email',
+        message: 'Please enter your email address.',
+      );
+    }
+
+    // Validate UTHM email
+    if (!emailTrimmed.endsWith('@student.uthm.edu.my') &&
+        !emailTrimmed.endsWith('@uthm.edu.my')) {
+      throw FirebaseAuthException(
+        code: 'invalid-email-domain',
+        message: 'Please use your UTHM email address.',
+      );
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(email: emailTrimmed);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'No account found with this email address.',
+        );
+      }
+      rethrow;
+    }
+  }
 }
