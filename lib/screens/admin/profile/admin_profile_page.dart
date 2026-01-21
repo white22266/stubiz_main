@@ -19,10 +19,7 @@ class AdminProfilePage extends StatelessWidget {
     final user = AuthService.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Admin Profile'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -43,7 +40,11 @@ class AdminProfilePage extends StatelessWidget {
                   const CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.admin_panel_settings, size: 50, color: Colors.purple),
+                    child: Icon(
+                      Icons.admin_panel_settings,
+                      size: 50,
+                      color: Colors.purple,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -60,9 +61,12 @@ class AdminProfilePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
@@ -117,7 +121,9 @@ class AdminProfilePage extends StatelessWidget {
                     title: 'Admin Settings',
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Admin settings coming soon')),
+                        const SnackBar(
+                          content: Text('Admin settings coming soon'),
+                        ),
                       );
                     },
                   ),
@@ -139,7 +145,9 @@ class AdminProfilePage extends StatelessWidget {
                     title: 'Backup Data',
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Backup feature coming soon')),
+                        const SnackBar(
+                          content: Text('Backup feature coming soon'),
+                        ),
                       );
                     },
                   ),
@@ -171,12 +179,7 @@ class AdminProfilePage extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.purple, size: 24),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 16))),
           Text(
             value,
             style: const TextStyle(

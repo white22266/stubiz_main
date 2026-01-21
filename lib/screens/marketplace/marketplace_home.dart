@@ -25,7 +25,7 @@ class _MarketplaceHomeState extends State<MarketplaceHome> {
     'Books',
     'Clothing',
     'Furniture',
-    'Others'
+    'Others',
   ];
 
   @override
@@ -249,12 +249,13 @@ class _MarketplaceHomeState extends State<MarketplaceHome> {
                   },
                   child: GridView.builder(
                     padding: const EdgeInsets.all(12),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final item = items[index];
@@ -278,7 +279,7 @@ class _MarketplaceHomeState extends State<MarketplaceHome> {
                                       ? Image.network(
                                           item.imageUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(
+                                          errorBuilder: (_, _, _) => const Icon(
                                             Icons.broken_image,
                                             size: 50,
                                             color: Colors.grey,
