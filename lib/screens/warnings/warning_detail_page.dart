@@ -89,13 +89,16 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
 
                 if (!mounted) return;
                 Navigator.pop(ctx);
+                if (!mounted) return;
                 Navigator.pop(context);
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Item deleted successfully')),
                 );
               } catch (e) {
                 if (!mounted) return;
                 Navigator.pop(ctx);
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error: $e')),
                 );
@@ -160,13 +163,16 @@ class _WarningDetailPageState extends State<WarningDetailPage> {
 
                 if (!mounted) return;
                 Navigator.pop(ctx);
+                if (!mounted) return;
                 Navigator.pop(context);
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Item resubmitted for review')),
                 );
               } catch (e) {
                 if (!mounted) return;
                 Navigator.pop(ctx);
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error: $e')),
                 );
