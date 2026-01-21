@@ -53,7 +53,7 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
     _category = widget.promotion.category;
     _website = widget.promotion.website;
     _locationCtrl.text = widget.promotion.location ?? '';
-    
+
     if (widget.promotion.geo != null) {
       _lat = widget.promotion.geo!.latitude;
       _lng = widget.promotion.geo!.longitude;
@@ -124,9 +124,9 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Geocoding error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Geocoding error: $e')));
       }
     } finally {
       setState(() => _isLoading = false);
@@ -150,7 +150,9 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
         description: _desc,
         category: _category,
         website: _website,
-        locationText: _locationCtrl.text.trim().isEmpty ? null : _locationCtrl.text.trim(),
+        locationText: _locationCtrl.text.trim().isEmpty
+            ? null
+            : _locationCtrl.text.trim(),
         geo: geo,
         imageFile: _imageFile,
       );
@@ -166,10 +168,7 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -202,43 +201,50 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
                           child: Image.file(_imageFile!, fit: BoxFit.cover),
                         )
                       : widget.promotion.imageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Stack(
-                                children: [
-                                  Image.network(
-                                    widget.promotion.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                  ),
-                                  Container(
-                                    color: Colors.black.withOpacity(0.3),
-                                    child: const Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.camera_alt, color: Colors.white, size: 40),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            'Tap to change photo',
-                                            style: TextStyle(color: Colors.white, fontSize: 14),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Stack(
+                            children: [
+                              Image.network(
+                                widget.promotion.imageUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
                               ),
-                            )
-                          : const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.camera_alt, size: 40),
-                                SizedBox(height: 8),
-                                Text('Tap to add photo'),
-                              ],
-                            ),
+                              Container(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                child: const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Tap to change photo',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.camera_alt, size: 40),
+                            SizedBox(height: 8),
+                            Text('Tap to add photo'),
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -256,7 +262,7 @@ class _EditPromotionScreenState extends State<EditPromotionScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),

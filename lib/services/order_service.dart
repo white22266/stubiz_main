@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/order.dart' as order_model;
 import '../models/cart_item.dart';
+// ignore_for_file: avoid_types_as_parameter_names
 
 class OrderService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -29,10 +30,16 @@ class OrderService {
       final userData = userDoc.data() ?? {};
 
       // Convert cart items to order items
-      final orderItems = cartItems.map((item) => order_model.OrderItem.fromCartItem(item)).toList();
+      final orderItems = cartItems
+          .map((item) => order_model.OrderItem.fromCartItem(item))
+          .toList();
 
       // Calculate totals
-      final subtotal = cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
+
+      final subtotal = cartItems.fold(
+        0.0,
+        (sum, item) => sum + item.totalPrice,
+      );
       final tax = subtotal * 0.06; // 6% tax
       final total = subtotal + tax;
 
@@ -83,10 +90,10 @@ class OrderService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => order_model.Order.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // Get single order by ID
@@ -156,11 +163,13 @@ class OrderService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => order_model.Order.fromFirestore(doc))
-          .where((order) => order.items.any((item) => item.sellerId == sellerId))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .where(
+                (order) => order.items.any((item) => item.sellerId == sellerId),
+              )
+              .toList();
+        });
   }
 
   // Get all orders (admin only)
@@ -170,10 +179,10 @@ class OrderService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => order_model.Order.fromFirestore(doc))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => order_model.Order.fromFirestore(doc))
+              .toList();
+        });
   }
 
   // Get order statistics
@@ -184,12 +193,20 @@ class OrderService {
           .where('userId', isEqualTo: userId)
           .get();
 
-      final orders = snapshot.docs.map((doc) => order_model.Order.fromFirestore(doc)).toList();
+      final orders = snapshot.docs
+          .map((doc) => order_model.Order.fromFirestore(doc))
+          .toList();
 
       int totalOrders = orders.length;
-      int pendingOrders = orders.where((o) => o.status == order_model.OrderStatus.pending).length;
-      int completedOrders = orders.where((o) => o.status == order_model.OrderStatus.completed).length;
-      int cancelledOrders = orders.where((o) => o.status == order_model.OrderStatus.cancelled).length;
+      int pendingOrders = orders
+          .where((o) => o.status == order_model.OrderStatus.pending)
+          .length;
+      int completedOrders = orders
+          .where((o) => o.status == order_model.OrderStatus.completed)
+          .length;
+      int cancelledOrders = orders
+          .where((o) => o.status == order_model.OrderStatus.cancelled)
+          .length;
       double totalSpent = orders
           .where((o) => o.status != order_model.OrderStatus.cancelled)
           .fold(0.0, (total, order) => total + order.total);

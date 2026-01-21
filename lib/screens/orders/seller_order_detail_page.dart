@@ -20,9 +20,7 @@ class SellerOrderDetailPage extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Details'),
-      ),
+      appBar: AppBar(title: const Text('Order Details')),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +49,7 @@ class SellerOrderDetailPage extends StatelessWidget {
   Widget _buildStatusHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      color: _getStatusColor(order.status).withOpacity(0.1),
+      color: _getStatusColor(order.status).withValues(alpha: 0.1),
       child: Column(
         children: [
           Icon(
@@ -71,18 +69,12 @@ class SellerOrderDetailPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Order #${order.id.substring(0, 12).toUpperCase()}',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
           ),
           const SizedBox(height: 4),
           Text(
             '${order.formattedDate} at ${order.formattedTime}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -97,17 +89,14 @@ class SellerOrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Buyer Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildInfoRow(Icons.person, 'Name', order.userName),
           const SizedBox(height: 12),
           _buildInfoRow(Icons.email, 'Email', order.userEmail),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber),
+          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber ?? 'N/A'),
         ],
       ),
     );
@@ -125,10 +114,7 @@ class SellerOrderDetailPage extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 2),
               Text(
@@ -153,10 +139,7 @@ class SellerOrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Your Items in this Order',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ...sellerItems.map((item) => _buildOrderItem(item)),
@@ -242,10 +225,7 @@ class SellerOrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Your Earnings',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -268,10 +248,7 @@ class SellerOrderDetailPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '${sellerItems.length} item(s) × ${sellerItems.fold(0, (sum, item) => sum + item.quantity)} qty',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -286,16 +263,13 @@ class SellerOrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Shipping Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildInfoRow(
             Icons.location_on,
             'Delivery Address',
-            order.shippingAddress,
+            order.shippingAddress ?? 'N/A',
           ),
           const SizedBox(height: 12),
           _buildInfoRow(
@@ -316,10 +290,7 @@ class SellerOrderDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Order Notes',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Container(
@@ -329,10 +300,7 @@ class SellerOrderDetailPage extends StatelessWidget {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              order.notes!,
-              style: const TextStyle(fontSize: 14),
-            ),
+            child: Text(order.notes!, style: const TextStyle(fontSize: 14)),
           ),
         ],
       ),
@@ -351,7 +319,7 @@ class SellerOrderDetailPage extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -369,9 +337,7 @@ class SellerOrderDetailPage extends StatelessWidget {
                   onPressed: () => _markAsProcessing(context),
                   icon: const Icon(Icons.local_shipping),
                   label: const Text('Mark as Processing'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                  ),
+                  style: FilledButton.styleFrom(backgroundColor: Colors.blue),
                 ),
               ),
             if (order.status == OrderStatus.processing) ...[
@@ -382,9 +348,7 @@ class SellerOrderDetailPage extends StatelessWidget {
                   onPressed: () => _markAsCompleted(context),
                   icon: const Icon(Icons.check_circle),
                   label: const Text('Mark as Completed'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
+                  style: FilledButton.styleFrom(backgroundColor: Colors.green),
                 ),
               ),
             ],
@@ -417,10 +381,7 @@ class SellerOrderDetailPage extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
-        await OrderService.updateOrderStatus(
-          order.id,
-          OrderStatus.processing,
-        );
+        await OrderService.updateOrderStatus(order.id, OrderStatus.processing);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -434,10 +395,7 @@ class SellerOrderDetailPage extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -459,9 +417,7 @@ class SellerOrderDetailPage extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Complete'),
           ),
         ],
@@ -470,10 +426,7 @@ class SellerOrderDetailPage extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
-        await OrderService.updateOrderStatus(
-          order.id,
-          OrderStatus.completed,
-        );
+        await OrderService.updateOrderStatus(order.id, OrderStatus.completed);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -487,10 +440,7 @@ class SellerOrderDetailPage extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }

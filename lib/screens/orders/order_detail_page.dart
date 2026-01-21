@@ -48,7 +48,7 @@ class OrderDetailPage extends StatelessWidget {
   Widget _buildOrderHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      color: _getStatusColor(order.status).withOpacity(0.1),
+      color: _getStatusColor(order.status).withValues(alpha: 0.1),
       child: Column(
         children: [
           Icon(
@@ -86,11 +86,15 @@ class OrderDetailPage extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.calendar_today, 'Date', order.formattedDate ?? 'N/A'),
+          _buildInfoRow(Icons.calendar_today, 'Date', order.formattedDate),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.access_time, 'Time', order.formattedTime ?? 'N/A'),
+          _buildInfoRow(Icons.access_time, 'Time', order.formattedTime),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.payment, 'Payment Method', order.paymentMethod ?? 'PayPal'),
+          _buildInfoRow(
+            Icons.payment,
+            'Payment Method',
+            order.paymentMethod ?? 'PayPal',
+          ),
           if (order.paymentId != null) ...[
             const SizedBox(height: 12),
             _buildInfoRow(Icons.receipt, 'Transaction ID', order.paymentId!),
@@ -117,7 +121,10 @@ class OrderDetailPage extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
@@ -188,7 +195,10 @@ class OrderDetailPage extends StatelessWidget {
                     children: [
                       Text(
                         'RM ${item.price.toStringAsFixed(2)} x ${item.quantity}',
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
                       ),
                       Text(
                         'RM ${item.totalPrice.toStringAsFixed(2)}',
@@ -263,9 +273,13 @@ class OrderDetailPage extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.location_on, 'Address', order.shippingAddress),
+          _buildInfoRow(
+            Icons.location_on,
+            'Address',
+            order.shippingAddress ?? 'N/A',
+          ),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber),
+          _buildInfoRow(Icons.phone, 'Phone', order.phoneNumber ?? 'N/A'),
         ],
       ),
     );
@@ -289,10 +303,7 @@ class OrderDetailPage extends StatelessWidget {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              order.notes!,
-              style: const TextStyle(fontSize: 14),
-            ),
+            child: Text(order.notes!, style: const TextStyle(fontSize: 14)),
           ),
         ],
       ),
@@ -314,9 +325,7 @@ class OrderDetailPage extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Yes, Cancel'),
           ),
         ],
@@ -338,10 +347,7 @@ class OrderDetailPage extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }

@@ -119,10 +119,8 @@ class SellerOrdersPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SellerOrderDetailPage(
-                order: order,
-                sellerItems: sellerItems,
-              ),
+              builder: (context) =>
+                  SellerOrderDetailPage(order: order, sellerItems: sellerItems),
             ),
           );
         },
@@ -158,10 +156,7 @@ class SellerOrdersPage extends StatelessWidget {
                   Expanded(
                     child: Text(
                       order.userName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                     ),
                   ),
                 ],
@@ -182,57 +177,61 @@ class SellerOrdersPage extends StatelessWidget {
               const Divider(height: 24),
 
               // Items Preview
-              ...sellerItems.take(2).map((item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            color: Colors.grey[200],
-                            child: item.imageUrl != null
-                                ? Image.network(
-                                    item.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
-                                        const Icon(Icons.image, size: 20),
-                                  )
-                                : const Icon(Icons.image, size: 20),
+              ...sellerItems
+                  .take(2)
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              color: Colors.grey[200],
+                              child: item.imageUrl != null
+                                  ? Image.network(
+                                      item.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) =>
+                                          const Icon(Icons.image, size: 20),
+                                    )
+                                  : const Icon(Icons.image, size: 20),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.productName,
-                                style: const TextStyle(fontSize: 13),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                'Qty: ${item.quantity}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.productName,
+                                  style: const TextStyle(fontSize: 13),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                                Text(
+                                  'Qty: ${item.quantity}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          'RM ${item.totalPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                          Text(
+                            'RM ${item.totalPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
 
               if (sellerItems.length > 2)
                 Padding(
@@ -258,10 +257,7 @@ class SellerOrdersPage extends StatelessWidget {
                     children: [
                       Text(
                         'Your Earnings',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                       Text(
                         'RM ${totalAmount.toStringAsFixed(2)}',
@@ -318,7 +314,7 @@ class SellerOrdersPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color),
       ),
@@ -363,10 +359,7 @@ class SellerOrdersPage extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       try {
-        await OrderService.updateOrderStatus(
-          order.id,
-          OrderStatus.processing,
-        );
+        await OrderService.updateOrderStatus(order.id, OrderStatus.processing);
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -379,10 +372,7 @@ class SellerOrdersPage extends StatelessWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );
         }
       }
