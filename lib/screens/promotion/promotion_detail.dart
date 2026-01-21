@@ -153,19 +153,23 @@ class _PromotionDetailScreenState extends State<PromotionDetailScreen> {
   }
 
   Future<void> _editPromotion(BuildContext context) async {
-    final result = await Navigator.push<bool>(
-      context,
+    final navigator = Navigator.of(context);
+    final result = await navigator.push<bool>(
       MaterialPageRoute(
         builder: (context) => EditPromotionScreen(promotion: widget.item),
       ),
     );
 
     if (result == true && mounted) {
-      Navigator.pop(context);
+      navigator.pop();
     }
   }
 
   Future<void> _deletePromotion(BuildContext context) async {
+    // Extract context references before async gap
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -197,17 +201,17 @@ class _PromotionDetailScreenState extends State<PromotionDetailScreen> {
         );
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text('Promotion deleted successfully'),
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context);
+          navigator.pop();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(
               content: Text('Error deleting promotion: $e'),
               backgroundColor: Colors.red,
